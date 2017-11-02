@@ -27,7 +27,7 @@ import org.oasis.open.docs.wsn.b_2.SubscribeResponse;
     org.oasis.open.docs.wsrf.bf_2.ObjectFactory.class,
     org.oasis.open.docs.wsn.t_1.ObjectFactory.class,
     org.oasis.open.docs.wsrf.r_2.ObjectFactory.class,
-    org.w3._2005._08.addressing.ObjectFactory.class
+    org.w3.addressing.ObjectFactory.class
 })
 public interface NotificationProducer {
 
