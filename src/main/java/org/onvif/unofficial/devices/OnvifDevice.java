@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
@@ -18,7 +20,8 @@ import java.util.TimeZone;
 import javax.xml.soap.SOAPException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.onvif.unofficial.soapclient.SOAPClient;
+import org.onvif.unofficial.soapclient.ISoapClient;
+import org.onvif.unofficial.soapclient.SoapClient;
 import org.onvif.ver10.schema.Capabilities;
 
 
@@ -28,21 +31,21 @@ import org.onvif.ver10.schema.Capabilities;
  * 
  */
 public class OnvifDevice {
-	private final String HOST_IP;
-	private String originalIp;
+	private final String domain;
+	private String returnedIp;
 
 	private boolean isProxy;
 
 	private String username, password, nonce, utcTime;
 
-	private String serverDeviceUri, serverPtzUri, serverMediaUri, serverImagingUri, serverEventsUri;
+	private Map<DeviceSubclass,String> uriMap=new HashMap<>();
 
-	private SOAPClient soap;
+	private ISoapClient client;
 
-	private InitialDevices initialDevices;
-	private PtzDevices ptzDevices;
-	private MediaDevices mediaDevices;
-	private ImagingDevices imagingDevices;
+	private BaseService baseService;
+	private PtzService ptzService;
+	private MediaService mediaService;
+	private ImagingService imagingService;
 
 	
 	/**
@@ -63,22 +66,20 @@ public class OnvifDevice {
 	 */
 	public OnvifDevice(String hostIp, String user, String password) throws ConnectException, SOAPException {
 		
-		this.HOST_IP = hostIp;
+		this.domain = hostIp;
 
 		if (!isOnline()) {
 			throw new ConnectException("Host not available.");
 		}
-
-		this.serverDeviceUri = "http://" + HOST_IP + "/onvif/device_service";
-
+		uriMap.put(DeviceSubclass.BASE, "http://" + domain + "/onvif/device_service");
 		this.username = user;
 		this.password = password;
 
-		this.soap = new SOAPClient(this);
-		this.initialDevices = new InitialDevices(this);
-		this.ptzDevices = new PtzDevices(this);
-		this.mediaDevices = new MediaDevices(this);
-		this.imagingDevices = new ImagingDevices(this);
+		this.client = new SoapClient(this);
+		this.baseService = new BaseService(this);
+		this.ptzService = new PtzService(this);
+		this.mediaService = new MediaService(this);
+		this.imagingService = new ImagingService(this);
 		
 		init();
 	}
@@ -104,8 +105,8 @@ public class OnvifDevice {
 	 * requests.
 	 */
 	private boolean isOnline() {
-		String port = HOST_IP.contains(":") ? HOST_IP.substring(HOST_IP.indexOf(':') + 1) : "80";
-		String ip = HOST_IP.contains(":") ? HOST_IP.substring(0, HOST_IP.indexOf(':')) : HOST_IP;
+		String port = domain.contains(":") ? domain.substring(domain.indexOf(':') + 1) : "80";
+		String ip = domain.contains(":") ? domain.substring(0, domain.indexOf(':')) : domain;
 		
 		Socket socket = null;
 		try {
@@ -148,41 +149,41 @@ public class OnvifDevice {
 		String localDeviceUri = capabilities.getDevice().getXAddr();
 
 		if (localDeviceUri.startsWith("http://")) {
-			originalIp = localDeviceUri.replace("http://", "");
-			originalIp = originalIp.substring(0, originalIp.indexOf('/'));
+			returnedIp = localDeviceUri.replace("http://", "");
+			returnedIp = returnedIp.substring(0, returnedIp.indexOf('/'));
 		}
 		else {
 			throw new ConnectException("Unknown protocol");
 		}
 			
-		if (!originalIp.equals(HOST_IP)) {
+		if (!returnedIp.equals(domain)) {
 			isProxy = true;
 		}
 
 		if (capabilities.getMedia() != null && capabilities.getMedia().getXAddr() != null) {
-			serverMediaUri = replaceLocalIpWithProxyIp(capabilities.getMedia().getXAddr());
+			uriMap.put(DeviceSubclass.MEDIA,replaceLocalIpWithProxyIp(capabilities.getMedia().getXAddr()));
 		}
 
 		if (capabilities.getPTZ() != null && capabilities.getPTZ().getXAddr() != null) {
-			serverPtzUri = replaceLocalIpWithProxyIp(capabilities.getPTZ().getXAddr());
+			uriMap.put(DeviceSubclass.PTZ, replaceLocalIpWithProxyIp(capabilities.getPTZ().getXAddr()));
 		}
 		
 		if (capabilities.getImaging() != null && capabilities.getImaging().getXAddr() != null) {
-			serverImagingUri = replaceLocalIpWithProxyIp(capabilities.getImaging().getXAddr());
+			uriMap.put(DeviceSubclass.IMAGING, replaceLocalIpWithProxyIp(capabilities.getImaging().getXAddr()));
 		}
 
 		if (capabilities.getMedia() != null && capabilities.getEvents().getXAddr() != null) {
-			serverEventsUri = replaceLocalIpWithProxyIp(capabilities.getEvents().getXAddr());
+			uriMap.put(DeviceSubclass.EVENT, replaceLocalIpWithProxyIp(capabilities.getEvents().getXAddr()));
 		}
 	}
 
 	public String replaceLocalIpWithProxyIp(String original) {
 		if (original.startsWith("http:///")) {
-			original.replace("http:///", "http://"+HOST_IP);
+			original.replace("http:///", "http://"+domain);
 		}
 		
 		if (isProxy) {
-			return original.replace(originalIp, HOST_IP);
+			return original.replace(returnedIp, domain);
 		}
 		return original;
 	}
@@ -260,74 +261,58 @@ public class OnvifDevice {
 		return utcTime;
 	}
 
-	public SOAPClient getSoap() {
-		return soap;
+	public ISoapClient getSoap() {
+		return client;
 	}
 
 	/**
 	 * Is used for basic devices and requests of given Onvif Device
 	 */
-	public InitialDevices getDevices() {
-		return initialDevices;
+	public BaseService getDevices() {
+		return baseService;
 	}
 
 	/**
 	 * Can be used for PTZ controlling requests, may not be supported by device!
 	 */
-	public PtzDevices getPtz() {
-		return ptzDevices;
+	public PtzService getPtz() {
+		return ptzService;
 	}
 
 	/**
 	 * Can be used to get media data from OnvifDevice
 	 * @return
 	 */
-	public MediaDevices getMedia() {
-		return mediaDevices;
+	public MediaService getMedia() {
+		return mediaService;
 	}
 
 	/**
 	 * Can be used to get media data from OnvifDevice
 	 * @return
 	 */
-	public ImagingDevices getImaging() {
-		return imagingDevices;
-	}
-
-
-	public String getDeviceUri() {
-		return serverDeviceUri;
-	}
-
-	public String getPtzUri() {
-		return serverPtzUri;
-	}
-
-	public String getMediaUri() {
-		return serverMediaUri;
-	}
-
-	public String getImagingUri() {
-		return serverImagingUri;
-	}
-
-	public String getEventsUri() {
-		return serverEventsUri;
+	public ImagingService getImaging() {
+		return imagingService;
 	}
 	
 	public Date getDate() {
-		return initialDevices.getDate();
+		return baseService.getDate();
 	}
 	
 	public String getName() {
-		return initialDevices.getDeviceInformation().getModel();
+		return baseService.getDeviceInformation().getModel();
 	}
 	
 	public String getHostname() {
-		return initialDevices.getHostname();
+		return baseService.getHostname();
 	}
 	
 	public String reboot() throws ConnectException, SOAPException {
-		return initialDevices.reboot();
+		return baseService.reboot();
+	}
+
+	public String getUri(DeviceSubclass type) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

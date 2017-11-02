@@ -4,7 +4,7 @@ import java.net.ConnectException;
 
 import javax.xml.soap.SOAPException;
 
-import org.onvif.unofficial.soapclient.SOAPClient;
+import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.schema.AbsoluteFocus;
 import org.onvif.ver10.schema.FocusMove;
 import org.onvif.ver10.schema.ImagingOptions20;
@@ -19,14 +19,14 @@ import org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
 
 
-public class ImagingDevices {
-	@SuppressWarnings("unused")
+public class ImagingService {
+//	@SuppressWarnings("unused")
 	private OnvifDevice onvifDevice;
-	private SOAPClient soap;
+	private ISoapClient client;
 
-	public ImagingDevices(OnvifDevice onvifDevice) {
+	public ImagingService(OnvifDevice onvifDevice) {
 		this.onvifDevice = onvifDevice;
-		this.soap = onvifDevice.getSoap();
+		this.client = onvifDevice.getSoap();
 	}
 
 	public ImagingOptions20 getOptions(String videoSourceToken) {
@@ -40,7 +40,7 @@ public class ImagingDevices {
 		request.setVideoSourceToken(videoSourceToken);
 
 		try {
-			response = (GetOptionsResponse) soap.createSOAPImagingRequest(request, response, false);
+			response = (GetOptionsResponse) client.processSOAPImagingRequest(request, response, false);
 		}
 		catch (SOAPException | ConnectException e) {
 			e.printStackTrace();
@@ -72,7 +72,7 @@ public class ImagingDevices {
 		request.setFocus(focusMove);
 
 		try {
-			response = (MoveResponse) soap.createSOAPImagingRequest(request, response, true);
+			response = (MoveResponse) client.processSOAPImagingRequest(request, response, true);
 		}
 		catch (SOAPException | ConnectException e) {
 			e.printStackTrace();
@@ -97,7 +97,7 @@ public class ImagingDevices {
 		request.setVideoSourceToken(videoSourceToken);
 
 		try {
-			response = (GetImagingSettingsResponse) soap.createSOAPImagingRequest(request, response, true);
+			response = (GetImagingSettingsResponse) client.processSOAPImagingRequest(request, response, true);
 		}
 		catch (SOAPException | ConnectException e) {
 			e.printStackTrace();
@@ -123,7 +123,7 @@ public class ImagingDevices {
 		request.setImagingSettings(imagingSettings);
 
 		try {
-			response = (SetImagingSettingsResponse) soap.createSOAPImagingRequest(request, response, true);
+			response = (SetImagingSettingsResponse) client.processSOAPImagingRequest(request, response, true);
 		}
 		catch (SOAPException | ConnectException e) {
 			e.printStackTrace();

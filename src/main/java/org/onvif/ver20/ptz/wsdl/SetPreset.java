@@ -13,6 +13,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.onvif.unofficial.soapclient.SoapRequest;
+
 /**
  * <p>
  * Java-Klasse f�r anonymous complex type.
@@ -39,7 +41,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "profileToken", "presetName", "presetToken" })
 @XmlRootElement(name = "SetPreset")
-public class SetPreset {
+public class SetPreset implements SoapRequest{
 
 	@XmlElement(name = "ProfileToken", required = true)
 	protected String profileToken;

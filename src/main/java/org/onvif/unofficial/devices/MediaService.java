@@ -5,7 +5,7 @@ import java.util.List;
 
 import javax.xml.soap.SOAPException;
 
-import org.onvif.unofficial.soapclient.SOAPClient;
+import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.media.wsdl.GetSnapshotUri;
 import org.onvif.ver10.media.wsdl.GetSnapshotUriResponse;
 import org.onvif.ver10.media.wsdl.GetStreamUri;
@@ -25,11 +25,11 @@ import org.onvif.ver10.schema.VideoEncoderConfiguration;
 import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoSource;
 
-public class MediaDevices {
+public class MediaService {
 	private OnvifDevice onvifDevice;
-	private SOAPClient soap;
+	private ISoapClient soap;
 
-	public MediaDevices(OnvifDevice onvifDevice) {
+	public MediaService(OnvifDevice onvifDevice) {
 		this.onvifDevice = onvifDevice;
 		this.soap = onvifDevice.getSoap();
 	}
@@ -129,7 +129,7 @@ public class MediaDevices {
 		request.setStreamSetup(streamSetup);
 
 		try {
-			response = (GetStreamUriResponse) soap.createSOAPMediaRequest(request, response, false);
+			response = (GetStreamUriResponse) soap.processSOAPMediaRequest(request, response, false);
 		}
 		catch (SOAPException | ConnectException e) {
 			throw e;
@@ -153,7 +153,7 @@ public class MediaDevices {
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (GetVideoEncoderConfigurationOptionsResponse) soap.createSOAPMediaRequest(request, response, false);
+			response = (GetVideoEncoderConfigurationOptionsResponse) soap.processSOAPMediaRequest(request, response, false);
 		}
 		catch (SOAPException | ConnectException e) {
 			throw e;
@@ -174,7 +174,7 @@ public class MediaDevices {
 		request.setForcePersistence(true);
 
 		try {
-			response = (SetVideoEncoderConfigurationResponse) soap.createSOAPMediaRequest(request, response, true);
+			response = (SetVideoEncoderConfigurationResponse) soap.processSOAPMediaRequest(request, response, true);
 		}
 		catch (SOAPException | ConnectException e) {
 			throw e;
@@ -198,7 +198,7 @@ public class MediaDevices {
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (GetSnapshotUriResponse) soap.createSOAPMediaRequest(request, response, true);
+			response = (GetSnapshotUriResponse) soap.processSOAPMediaRequest(request, response, true);
 		}
 		catch (SOAPException | ConnectException e) {
 			throw e;
@@ -216,7 +216,7 @@ public class MediaDevices {
 		GetVideoSourcesResponse response = new GetVideoSourcesResponse();
 
 		try {
-			response = (GetVideoSourcesResponse) soap.createSOAPMediaRequest(request, response, false);
+			response = (GetVideoSourcesResponse) soap.processSOAPMediaRequest(request, response, false);
 		}
 		catch (SOAPException | ConnectException e) {
 			throw e;

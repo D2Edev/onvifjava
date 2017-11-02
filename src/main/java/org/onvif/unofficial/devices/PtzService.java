@@ -1,11 +1,10 @@
 package org.onvif.unofficial.devices;
 
-import java.net.ConnectException;
 import java.util.List;
 
 import javax.xml.soap.SOAPException;
 
-import org.onvif.unofficial.soapclient.SOAPClient;
+import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.schema.FloatRange;
 import org.onvif.ver10.schema.PTZConfiguration;
 import org.onvif.ver10.schema.PTZNode;
@@ -42,14 +41,14 @@ import org.onvif.ver20.ptz.wsdl.SetPresetResponse;
 import org.onvif.ver20.ptz.wsdl.Stop;
 import org.onvif.ver20.ptz.wsdl.StopResponse;
 
-
-public class PtzDevices {
+public class PtzService {
+	private static final DeviceSubclass TYPE = DeviceSubclass.PTZ;
 	private OnvifDevice onvifDevice;
-	private SOAPClient soap;
+	private ISoapClient client;
 
-	public PtzDevices(OnvifDevice onvifDevice) {
+	public PtzService(OnvifDevice onvifDevice) {
 		this.onvifDevice = onvifDevice;
-		this.soap = onvifDevice.getSoap();
+		this.client = onvifDevice.getSoap();
 	}
 
 	public boolean isPtzOperationsSupported(String profileToken) {
@@ -66,7 +65,7 @@ public class PtzDevices {
 		}
 		Profile profile = onvifDevice.getDevices().getProfile(profileToken);
 		if (profile == null) {
-			throw new IllegalArgumentException("No profile available for token: "+profileToken);
+			throw new IllegalArgumentException("No profile available for token: " + profileToken);
 		}
 		if (profile.getPTZConfiguration() == null) {
 			return null; // no PTZ support
@@ -76,22 +75,15 @@ public class PtzDevices {
 	}
 
 	public List<PTZNode> getNodes() {
-		GetNodes request = new GetNodes();
-		GetNodesResponse response = new GetNodesResponse();
-
 		try {
-			response = (GetNodesResponse) soap.createSOAPDeviceRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GetNodesResponse response = client.processOnvifServiceRequest(new GetNodes(), GetNodesResponse.class,
+					TYPE, true);
+			if (response == null)
+				return null;
+			return response.getPTZNode();
+		} catch (Exception e) {
 			return null;
 		}
-
-		if (response == null) {
-			return null;
-		}
-
-		return response.getPTZNode();
 	}
 
 	public PTZNode getNode(String profileToken) {
@@ -100,7 +92,6 @@ public class PtzDevices {
 
 	public PTZNode getNode(PTZConfiguration ptzConfiguration) {
 		GetNode request = new GetNode();
-		GetNodeResponse response = new GetNodeResponse();
 
 		if (ptzConfiguration == null) {
 			return null; // no PTZ support
@@ -108,18 +99,14 @@ public class PtzDevices {
 		request.setNodeToken(ptzConfiguration.getNodeToken());
 
 		try {
-			response = (GetNodeResponse) soap.createSOAPDeviceRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GetNodeResponse response = client.processOnvifServiceRequest(request, GetNodeResponse.class, TYPE,
+					true);
+			if (response == null)
+				return null;
+			return response.getPTZNode();
+		} catch (Exception e) {
 			return null;
 		}
-
-		if (response == null) {
-			return null;
-		}
-
-		return response.getPTZNode();
 	}
 
 	public FloatRange getPanSpaces(String profileToken) {
@@ -149,8 +136,7 @@ public class PtzDevices {
 			if (profile.getPTZConfiguration().getDefaultAbsolutePantTiltPositionSpace() != null) {
 				return true;
 			}
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 		}
 		return false;
 	}
@@ -186,7 +172,6 @@ public class PtzDevices {
 		}
 
 		AbsoluteMove request = new AbsoluteMove();
-		AbsoluteMoveResponse response = new AbsoluteMoveResponse();
 
 		Vector2D panTiltVector = new Vector2D();
 		panTiltVector.setX(x);
@@ -202,17 +187,12 @@ public class PtzDevices {
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (AbsoluteMoveResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException e) {
-			throw e;
-		}
-		catch (ConnectException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
+			AbsoluteMoveResponse response = client.processOnvifServiceRequest(request, AbsoluteMoveResponse.class,
+					TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
@@ -225,16 +205,14 @@ public class PtzDevices {
 			if (profile.getPTZConfiguration().getDefaultRelativePanTiltTranslationSpace() != null) {
 				return true;
 			}
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 		}
 		return false;
 	}
 
 	public boolean relativeMove(String profileToken, float x, float y, float zoom) {
-		RelativeMove request = new RelativeMove();
-		RelativeMoveResponse response = new RelativeMoveResponse();
 
+		RelativeMove request = new RelativeMove();
 		Vector2D panTiltVector = new Vector2D();
 		panTiltVector.setX(x);
 		panTiltVector.setY(y);
@@ -249,14 +227,12 @@ public class PtzDevices {
 		request.setTranslation(translation);
 
 		try {
-			response = (RelativeMoveResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
+			RelativeMoveResponse response = client.processOnvifServiceRequest(request, RelativeMoveResponse.class,
+					TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
@@ -269,15 +245,13 @@ public class PtzDevices {
 			if (profile.getPTZConfiguration().getDefaultContinuousPanTiltVelocitySpace() != null) {
 				return true;
 			}
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 		}
 		return false;
 	}
 
 	public boolean continuousMove(String profileToken, float x, float y, float zoom) {
 		ContinuousMove request = new ContinuousMove();
-		ContinuousMoveResponse response = new ContinuousMoveResponse();
 
 		Vector2D panTiltVector = new Vector2D();
 		panTiltVector.setX(x);
@@ -293,14 +267,12 @@ public class PtzDevices {
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (ContinuousMoveResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
+			ContinuousMoveResponse response = client.processOnvifServiceRequest(request,
+					ContinuousMoveResponse.class, TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
@@ -311,19 +283,16 @@ public class PtzDevices {
 		Stop request = new Stop();
 		request.setPanTilt(true);
 		request.setZoom(true);
-		StopResponse response = new StopResponse();
 
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (StopResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
+			StopResponse response = client.processOnvifServiceRequest(request, StopResponse.class, TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
 			return false;
 		}
 
@@ -332,23 +301,21 @@ public class PtzDevices {
 
 	public PTZStatus getStatus(String profileToken) {
 		GetStatus request = new GetStatus();
-		GetStatusResponse response = new GetStatusResponse();
 
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (GetStatusResponse) soap.createSOAPPtzRequest(request, response, false);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GetStatusResponse response = client.processOnvifServiceRequest(request, GetStatusResponse.class, TYPE,
+					true);
+			if (response == null) {
+				return null;
+			}
+
+			return response.getPTZStatus();
+		} catch (Exception e) {
 			return null;
 		}
 
-		if (response == null) {
-			return null;
-		}
-
-		return response.getPTZStatus();
 	}
 
 	public PTZVector getPosition(String profileToken) {
@@ -363,19 +330,14 @@ public class PtzDevices {
 
 	public boolean setHomePosition(String profileToken) {
 		SetHomePosition request = new SetHomePosition();
-		SetHomePositionResponse response = new SetHomePositionResponse();
-
 		request.setProfileToken(profileToken);
-
 		try {
-			response = (SetHomePositionResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
+			SetHomePositionResponse response = client.processOnvifServiceRequest(request,
+					SetHomePositionResponse.class, TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
@@ -384,46 +346,41 @@ public class PtzDevices {
 
 	public List<PTZPreset> getPresets(String profileToken) {
 		GetPresets request = new GetPresets();
-		GetPresetsResponse response = new GetPresetsResponse();
 
 		request.setProfileToken(profileToken);
 
 		try {
-			response = (GetPresetsResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GetPresetsResponse response = client.processOnvifServiceRequest(request, GetPresetsResponse.class,
+					TYPE, true);
+			if (response == null) {
+				return null;
+			}
+
+			return response.getPreset();
+		} catch (Exception e) {
 			return null;
 		}
 
-		if (response == null) {
-			return null;
-		}
-
-		return response.getPreset();
 	}
 
 	public String setPreset(String presetName, String presetToken, String profileToken) {
 		SetPreset request = new SetPreset();
-		SetPresetResponse response = new SetPresetResponse();
 
 		request.setProfileToken(profileToken);
 		request.setPresetName(presetName);
 		request.setPresetToken(presetToken);
 
 		try {
-			response = (SetPresetResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			SetPresetResponse response = client.processOnvifServiceRequest(request, SetPresetResponse.class, TYPE,
+					true);
+			if (response == null) {
+				return null;
+			}
+			return response.getPresetToken();
+		} catch (Exception e) {
 			return null;
 		}
 
-		if (response == null) {
-			return null;
-		}
-
-		return response.getPresetToken();
 	}
 
 	public String setPreset(String presetName, String profileToken) {
@@ -432,20 +389,17 @@ public class PtzDevices {
 
 	public boolean removePreset(String presetToken, String profileToken) {
 		RemovePreset request = new RemovePreset();
-		RemovePresetResponse response = new RemovePresetResponse();
 
 		request.setProfileToken(profileToken);
 		request.setPresetToken(presetToken);
 
 		try {
-			response = (RemovePresetResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
-			return false;
-		}
-
-		if (response == null) {
+			RemovePresetResponse response = client.processOnvifServiceRequest(request, RemovePresetResponse.class,
+					TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
@@ -454,22 +408,19 @@ public class PtzDevices {
 
 	public boolean gotoPreset(String presetToken, String profileToken) {
 		GotoPreset request = new GotoPreset();
-		GotoPresetResponse response = new GotoPresetResponse();
 
 		request.setProfileToken(profileToken);
 		request.setPresetToken(presetToken);
 
 		try {
-			response = (GotoPresetResponse) soap.createSOAPPtzRequest(request, response, true);
-		}
-		catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GotoPresetResponse response = client.processOnvifServiceRequest(request, GotoPresetResponse.class, TYPE, true);
+			if (response == null) {
+				return false;
+			}
+		} catch (Exception e) {
 			return false;
 		}
 
-		if (response == null) {
-			return false;
-		}
 
 		return true;
 	}

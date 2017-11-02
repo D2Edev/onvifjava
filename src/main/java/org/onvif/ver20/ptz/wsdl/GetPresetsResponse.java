@@ -14,6 +14,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import org.onvif.unofficial.soapclient.SoapResponse;
 import org.onvif.ver10.schema.PTZPreset;
 
 /**
@@ -40,7 +42,7 @@ import org.onvif.ver10.schema.PTZPreset;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "preset" })
 @XmlRootElement(name = "GetPresetsResponse")
-public class GetPresetsResponse {
+public class GetPresetsResponse implements SoapResponse{
 
 	@XmlElement(name = "Preset")
 	protected List<PTZPreset> preset;

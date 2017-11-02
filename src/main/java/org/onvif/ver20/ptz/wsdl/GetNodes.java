@@ -12,6 +12,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.onvif.unofficial.soapclient.SoapRequest;
+
 /**
  * <p>
  * Java-Klasse f�r anonymous complex type.
@@ -33,6 +35,6 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "GetNodes")
-public class GetNodes {
+public class GetNodes implements SoapRequest{
 
 }
