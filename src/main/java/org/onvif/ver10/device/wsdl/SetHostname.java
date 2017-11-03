@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 
 /**
  * <p>
@@ -42,7 +42,7 @@ import org.onvif.unofficial.soapclient.SoapRequest;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "name" })
 @XmlRootElement(name = "SetHostname")
-public class SetHostname implements SoapRequest {
+public class SetHostname {
 
 	@XmlElement(name = "Name", required = true)
 	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)

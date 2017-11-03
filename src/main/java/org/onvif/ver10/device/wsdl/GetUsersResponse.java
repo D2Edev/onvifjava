@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 import org.onvif.ver10.schema.User;
 
 /**
@@ -42,7 +42,7 @@ import org.onvif.ver10.schema.User;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "user" })
 @XmlRootElement(name = "GetUsersResponse")
-public class GetUsersResponse implements SoapResponse {
+public class GetUsersResponse {
 
 	@XmlElement(name = "User")
 	protected List<User> user;

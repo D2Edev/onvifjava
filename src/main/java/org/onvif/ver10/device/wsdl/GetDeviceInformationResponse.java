@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 
 /**
  * <p>
@@ -43,7 +43,7 @@ import org.onvif.unofficial.soapclient.SoapResponse;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "manufacturer", "model", "firmwareVersion", "serialNumber", "hardwareId" })
 @XmlRootElement(name = "GetDeviceInformationResponse")
-public class GetDeviceInformationResponse implements SoapResponse{
+public class GetDeviceInformationResponse{
 
 	@XmlElement(name = "Manufacturer", required = true)
 	protected String manufacturer;

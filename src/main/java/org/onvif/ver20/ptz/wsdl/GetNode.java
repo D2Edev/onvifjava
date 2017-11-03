@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 
 /**
  * <p>
@@ -39,7 +39,7 @@ import org.onvif.unofficial.soapclient.SoapRequest;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "nodeToken" })
 @XmlRootElement(name = "GetNode")
-public class GetNode implements SoapRequest{
+public class GetNode{
 
 	@XmlElement(name = "NodeToken", required = true)
 	protected String nodeToken;

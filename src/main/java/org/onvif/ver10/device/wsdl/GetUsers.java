@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 
 /**
  * <p>
@@ -37,6 +37,6 @@ import org.onvif.unofficial.soapclient.SoapRequest;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "")
 @XmlRootElement(name = "GetUsers")
-public class GetUsers implements SoapRequest{
+public class GetUsers{
 
 }

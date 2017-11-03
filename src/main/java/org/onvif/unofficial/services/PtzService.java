@@ -1,9 +1,10 @@
-package org.onvif.unofficial.devices;
+package org.onvif.unofficial.services;
 
 import java.util.List;
 
 import javax.xml.soap.SOAPException;
 
+import org.onvif.unofficial.OnvifDevice;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.schema.FloatRange;
 import org.onvif.ver10.schema.PTZConfiguration;
@@ -41,29 +42,26 @@ import org.onvif.ver20.ptz.wsdl.SetPresetResponse;
 import org.onvif.ver20.ptz.wsdl.Stop;
 import org.onvif.ver20.ptz.wsdl.StopResponse;
 
-public class PtzService {
-	private static final DeviceSubclass TYPE = DeviceSubclass.PTZ;
-	private OnvifDevice onvifDevice;
-	private ISoapClient client;
+public class PtzService extends AbstractService {
 
-	public PtzService(OnvifDevice onvifDevice) {
-		this.onvifDevice = onvifDevice;
-		this.client = onvifDevice.getSoap();
+	public PtzService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
+		super(onvifDevice, client, serviceUrl);
 	}
 
-	public boolean isPtzOperationsSupported(String profileToken) {
+	public boolean isPtzOperationsSupported(String profileToken) throws Exception {
 		return getPTZConfiguration(profileToken) != null;
 	}
 
 	/**
 	 * @param profileToken
 	 * @return If is null, PTZ operations are not supported
+	 * @throws Exception
 	 */
-	public PTZConfiguration getPTZConfiguration(String profileToken) {
+	public PTZConfiguration getPTZConfiguration(String profileToken) throws Exception {
 		if (profileToken == null || profileToken.equals("")) {
 			return null;
 		}
-		Profile profile = onvifDevice.getDevices().getProfile(profileToken);
+		Profile profile = onvifDevice.getMediaService().getProfile(profileToken);
 		if (profile == null) {
 			throw new IllegalArgumentException("No profile available for token: " + profileToken);
 		}
@@ -74,69 +72,54 @@ public class PtzService {
 		return profile.getPTZConfiguration();
 	}
 
-	public List<PTZNode> getNodes() {
-		try {
-			GetNodesResponse response = client.processOnvifServiceRequest(new GetNodes(), GetNodesResponse.class,
-					TYPE, true);
-			if (response == null)
-				return null;
-			return response.getPTZNode();
-		} catch (Exception e) {
+	public List<PTZNode> getNodes() throws Exception {
+		GetNodesResponse response = client.processRequest(new GetNodes(), GetNodesResponse.class, serviceUrl, true);
+		if (response == null)
 			return null;
-		}
+		return response.getPTZNode();
 	}
 
-	public PTZNode getNode(String profileToken) {
+	public PTZNode getNode(String profileToken) throws Exception {
 		return getNode(getPTZConfiguration(profileToken));
 	}
 
-	public PTZNode getNode(PTZConfiguration ptzConfiguration) {
+	public PTZNode getNode(PTZConfiguration ptzConfiguration) throws Exception {
 		GetNode request = new GetNode();
-
 		if (ptzConfiguration == null) {
 			return null; // no PTZ support
 		}
 		request.setNodeToken(ptzConfiguration.getNodeToken());
-
-		try {
-			GetNodeResponse response = client.processOnvifServiceRequest(request, GetNodeResponse.class, TYPE,
-					true);
-			if (response == null)
-				return null;
-			return response.getPTZNode();
-		} catch (Exception e) {
+		GetNodeResponse response = client.processRequest(request, GetNodeResponse.class, serviceUrl, true);
+		if (response == null)
 			return null;
-		}
+		return response.getPTZNode();
 	}
 
-	public FloatRange getPanSpaces(String profileToken) {
+	public FloatRange getPanSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
 		PTZSpaces ptzSpaces = node.getSupportedPTZSpaces();
 		return ptzSpaces.getAbsolutePanTiltPositionSpace().get(0).getXRange();
 	}
 
-	public FloatRange getTiltSpaces(String profileToken) {
+	public FloatRange getTiltSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
 		PTZSpaces ptzSpaces = node.getSupportedPTZSpaces();
 		return ptzSpaces.getAbsolutePanTiltPositionSpace().get(0).getYRange();
 	}
 
-	public FloatRange getZoomSpaces(String profileToken) {
+	public FloatRange getZoomSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
 		PTZSpaces ptzSpaces = node.getSupportedPTZSpaces();
 		return ptzSpaces.getAbsoluteZoomPositionSpace().get(0).getXRange();
 	}
 
-	public boolean isAbsoluteMoveSupported(String profileToken) {
-		Profile profile = onvifDevice.getDevices().getProfile(profileToken);
-		try {
-			if (profile.getPTZConfiguration().getDefaultAbsolutePantTiltPositionSpace() != null) {
-				return true;
-			}
-		} catch (NullPointerException e) {
+	public boolean isAbsoluteMoveSupported(String profileToken) throws Exception {
+		Profile profile = onvifDevice.getMediaService().getProfile(profileToken);
+		if (profile.getPTZConfiguration().getDefaultAbsolutePantTiltPositionSpace() != null) {
+			return true;
 		}
 		return false;
 	}
@@ -151,9 +134,9 @@ public class PtzService {
 	 *            Zoom
 	 * @see getPanSpaces(), getTiltSpaces(), getZoomSpaces()
 	 * @return True if move successful
-	 * @throws SOAPException
+	 * @throws Exception
 	 */
-	public boolean absoluteMove(String profileToken, float x, float y, float zoom) throws SOAPException {
+	public boolean absoluteMove(String profileToken, float x, float y, float zoom) throws Exception {
 		PTZNode node = getNode(profileToken);
 		if (node != null) {
 			FloatRange xRange = node.getSupportedPTZSpaces().getAbsolutePanTiltPositionSpace().get(0).getXRange();
@@ -170,47 +153,37 @@ public class PtzService {
 				throw new IllegalArgumentException("Bad value for tilt/y: " + y);
 			}
 		}
-
 		AbsoluteMove request = new AbsoluteMove();
-
 		Vector2D panTiltVector = new Vector2D();
 		panTiltVector.setX(x);
 		panTiltVector.setY(y);
 		Vector1D zoomVector = new Vector1D();
 		zoomVector.setX(zoom);
-
 		PTZVector ptzVector = new PTZVector();
 		ptzVector.setPanTilt(panTiltVector);
 		ptzVector.setZoom(zoomVector);
 		request.setPosition(ptzVector);
-
 		request.setProfileToken(profileToken);
-
-		try {
-			AbsoluteMoveResponse response = client.processOnvifServiceRequest(request, AbsoluteMoveResponse.class,
-					TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		AbsoluteMoveResponse response = client.processRequest(request, AbsoluteMoveResponse.class, serviceUrl, true);
+		if (response == null) {
 			return false;
 		}
-
 		return true;
 	}
 
-	public boolean isRelativeMoveSupported(String profileToken) {
-		Profile profile = onvifDevice.getDevices().getProfile(profileToken);
-		try {
-			if (profile.getPTZConfiguration().getDefaultRelativePanTiltTranslationSpace() != null) {
-				return true;
-			}
-		} catch (NullPointerException e) {
-		}
-		return false;
+	public boolean isRelativeMoveSupported(String profileToken) throws Exception {
+		if (onvifDevice.getMediaService() == null)
+			return false;
+		Profile profile = onvifDevice.getMediaService().getProfile(profileToken);
+		PTZConfiguration ptzConf = profile.getPTZConfiguration();
+		if (ptzConf == null)
+			return false;
+		if (ptzConf.getDefaultRelativePanTiltTranslationSpace() == null)
+			return false;
+		return true;
 	}
 
-	public boolean relativeMove(String profileToken, float x, float y, float zoom) {
+	public boolean relativeMove(String profileToken, float x, float y, float zoom) throws Exception {
 
 		RelativeMove request = new RelativeMove();
 		Vector2D panTiltVector = new Vector2D();
@@ -225,32 +198,26 @@ public class PtzService {
 
 		request.setProfileToken(profileToken);
 		request.setTranslation(translation);
-
-		try {
-			RelativeMoveResponse response = client.processOnvifServiceRequest(request, RelativeMoveResponse.class,
-					TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		RelativeMoveResponse response = client.processRequest(request, RelativeMoveResponse.class, serviceUrl, true);
+		if (response == null) {
 			return false;
 		}
-
 		return true;
 	}
 
-	public boolean isContinuosMoveSupported(String profileToken) {
-		Profile profile = onvifDevice.getDevices().getProfile(profileToken);
-		try {
-			if (profile.getPTZConfiguration().getDefaultContinuousPanTiltVelocitySpace() != null) {
-				return true;
-			}
-		} catch (NullPointerException e) {
-		}
-		return false;
+	public boolean isContinuosMoveSupported(String profileToken) throws Exception {
+		if (onvifDevice.getMediaService() == null)
+			return false;
+		Profile profile = onvifDevice.getMediaService().getProfile(profileToken);
+		PTZConfiguration ptzConf = profile.getPTZConfiguration();
+		if (ptzConf == null)
+			return false;
+		if (ptzConf.getDefaultContinuousPanTiltVelocitySpace() == null)
+			return false;
+		return true;
 	}
 
-	public boolean continuousMove(String profileToken, float x, float y, float zoom) {
+	public boolean continuousMove(String profileToken, float x, float y, float zoom) throws Exception {
 		ContinuousMove request = new ContinuousMove();
 
 		Vector2D panTiltVector = new Vector2D();
@@ -258,170 +225,104 @@ public class PtzService {
 		panTiltVector.setY(y);
 		Vector1D zoomVector = new Vector1D();
 		zoomVector.setX(zoom);
-
 		PTZSpeed ptzSpeed = new PTZSpeed();
 		ptzSpeed.setPanTilt(panTiltVector);
 		ptzSpeed.setZoom(zoomVector);
 		request.setVelocity(ptzSpeed);
-
 		request.setProfileToken(profileToken);
-
-		try {
-			ContinuousMoveResponse response = client.processOnvifServiceRequest(request,
-					ContinuousMoveResponse.class, TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		ContinuousMoveResponse response = client.processRequest(request, ContinuousMoveResponse.class, serviceUrl,
+				true);
+		if (response == null) {
 			return false;
 		}
-
 		return true;
 	}
 
-	public boolean stopMove(String profileToken) {
+	public boolean stopMove(String profileToken) throws Exception {
 		Stop request = new Stop();
 		request.setPanTilt(true);
 		request.setZoom(true);
-
 		request.setProfileToken(profileToken);
-
-		try {
-			StopResponse response = client.processOnvifServiceRequest(request, StopResponse.class, TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		StopResponse response = client.processRequest(request, StopResponse.class, serviceUrl, true);
+		if (response == null)
 			return false;
-		}
-
 		return true;
 	}
 
-	public PTZStatus getStatus(String profileToken) {
+	public PTZStatus getStatus(String profileToken) throws Exception {
 		GetStatus request = new GetStatus();
-
 		request.setProfileToken(profileToken);
-
-		try {
-			GetStatusResponse response = client.processOnvifServiceRequest(request, GetStatusResponse.class, TYPE,
-					true);
-			if (response == null) {
-				return null;
-			}
-
-			return response.getPTZStatus();
-		} catch (Exception e) {
+		GetStatusResponse response = client.processRequest(request, GetStatusResponse.class, serviceUrl, true);
+		if (response == null) {
 			return null;
 		}
-
+		return response.getPTZStatus();
 	}
 
-	public PTZVector getPosition(String profileToken) {
+	public PTZVector getPosition(String profileToken) throws Exception {
 		PTZStatus status = getStatus(profileToken);
-
 		if (status == null) {
 			return null;
 		}
-
 		return status.getPosition();
 	}
 
-	public boolean setHomePosition(String profileToken) {
+	public boolean setHomePosition(String profileToken) throws Exception {
 		SetHomePosition request = new SetHomePosition();
 		request.setProfileToken(profileToken);
-		try {
-			SetHomePositionResponse response = client.processOnvifServiceRequest(request,
-					SetHomePositionResponse.class, TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		SetHomePositionResponse response = client.processRequest(request, SetHomePositionResponse.class, serviceUrl,
+				true);
+		if (response == null) {
 			return false;
 		}
-
 		return true;
 	}
 
-	public List<PTZPreset> getPresets(String profileToken) {
+	public List<PTZPreset> getPresets(String profileToken) throws Exception {
 		GetPresets request = new GetPresets();
-
 		request.setProfileToken(profileToken);
-
-		try {
-			GetPresetsResponse response = client.processOnvifServiceRequest(request, GetPresetsResponse.class,
-					TYPE, true);
-			if (response == null) {
-				return null;
-			}
-
-			return response.getPreset();
-		} catch (Exception e) {
+		GetPresetsResponse response = client.processRequest(request, GetPresetsResponse.class, serviceUrl, true);
+		if (response == null) {
 			return null;
 		}
-
+		return response.getPreset();
 	}
 
-	public String setPreset(String presetName, String presetToken, String profileToken) {
+	public String setPreset(String presetName, String presetToken, String profileToken) throws Exception {
 		SetPreset request = new SetPreset();
-
 		request.setProfileToken(profileToken);
 		request.setPresetName(presetName);
 		request.setPresetToken(presetToken);
-
-		try {
-			SetPresetResponse response = client.processOnvifServiceRequest(request, SetPresetResponse.class, TYPE,
-					true);
-			if (response == null) {
-				return null;
-			}
-			return response.getPresetToken();
-		} catch (Exception e) {
+		SetPresetResponse response = client.processRequest(request, SetPresetResponse.class, serviceUrl, true);
+		if (response == null) {
 			return null;
 		}
-
+		return response.getPresetToken();
 	}
 
-	public String setPreset(String presetName, String profileToken) {
+	public String setPreset(String presetName, String profileToken) throws Exception {
 		return setPreset(presetName, null, profileToken);
 	}
 
-	public boolean removePreset(String presetToken, String profileToken) {
+	public boolean removePreset(String presetToken, String profileToken) throws Exception {
 		RemovePreset request = new RemovePreset();
-
 		request.setProfileToken(profileToken);
 		request.setPresetToken(presetToken);
-
-		try {
-			RemovePresetResponse response = client.processOnvifServiceRequest(request, RemovePresetResponse.class,
-					TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		RemovePresetResponse response = client.processRequest(request, RemovePresetResponse.class, serviceUrl, true);
+		if (response == null) {
 			return false;
 		}
-
 		return true;
 	}
 
-	public boolean gotoPreset(String presetToken, String profileToken) {
+	public boolean gotoPreset(String presetToken, String profileToken) throws Exception {
 		GotoPreset request = new GotoPreset();
-
 		request.setProfileToken(profileToken);
 		request.setPresetToken(presetToken);
-
-		try {
-			GotoPresetResponse response = client.processOnvifServiceRequest(request, GotoPresetResponse.class, TYPE, true);
-			if (response == null) {
-				return false;
-			}
-		} catch (Exception e) {
+		GotoPresetResponse response = client.processRequest(request, GotoPresetResponse.class, serviceUrl, true);
+		if (response == null) {
 			return false;
 		}
-
-
 		return true;
 	}
 }

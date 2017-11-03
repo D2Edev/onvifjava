@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 import org.onvif.ver10.schema.PTZSpeed;
 
 /**
@@ -42,7 +42,7 @@ import org.onvif.ver10.schema.PTZSpeed;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "profileToken", "presetToken", "speed" })
 @XmlRootElement(name = "GotoPreset")
-public class GotoPreset implements SoapRequest {
+public class GotoPreset {
 
 	@XmlElement(name = "ProfileToken", required = true)
 	protected String profileToken;

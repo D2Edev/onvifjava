@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 import org.onvif.ver10.schema.PTZSpeed;
 import org.onvif.ver10.schema.PTZVector;
 
@@ -43,7 +43,7 @@ import org.onvif.ver10.schema.PTZVector;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "profileToken", "translation", "speed" })
 @XmlRootElement(name = "RelativeMove")
-public class RelativeMove implements SoapRequest{
+public class RelativeMove{
 
 	@XmlElement(name = "ProfileToken", required = true)
 	protected String profileToken;

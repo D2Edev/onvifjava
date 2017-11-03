@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 import org.onvif.ver10.schema.PTZStatus;
 
 /**
@@ -40,7 +40,7 @@ import org.onvif.ver10.schema.PTZStatus;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "ptzStatus" })
 @XmlRootElement(name = "GetStatusResponse")
-public class GetStatusResponse implements SoapResponse{
+public class GetStatusResponse{
 
 	@XmlElement(name = "PTZStatus", required = true)
 	protected PTZStatus ptzStatus;

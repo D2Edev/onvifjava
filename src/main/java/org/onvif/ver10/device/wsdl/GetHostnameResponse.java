@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 import org.onvif.ver10.schema.HostnameInformation;
 
 /**
@@ -40,7 +40,7 @@ import org.onvif.ver10.schema.HostnameInformation;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "hostnameInformation" })
 @XmlRootElement(name = "GetHostnameResponse")
-public class GetHostnameResponse implements SoapResponse{
+public class GetHostnameResponse{
 
 	@XmlElement(name = "HostnameInformation", required = true)
 	protected HostnameInformation hostnameInformation;

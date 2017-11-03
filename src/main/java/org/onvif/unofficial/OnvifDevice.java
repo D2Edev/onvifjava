@@ -1,4 +1,4 @@
-package org.onvif.unofficial.devices;
+package org.onvif.unofficial;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -11,48 +11,39 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.SOAPException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.onvif.unofficial.services.DeviceManagementService;
+import org.onvif.unofficial.services.ImagingService;
+import org.onvif.unofficial.services.MediaService;
+import org.onvif.unofficial.services.PtzService;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.unofficial.soapclient.SoapClient;
 import org.onvif.ver10.schema.Capabilities;
 
 
-/**
- * 
- * @author Robin Dick
- * 
- */
 public class OnvifDevice {
 	private final String domain;
-	private String returnedIp;
-
+	private String returnedDomain;
 	private boolean isProxy;
-
 	private String username, password, nonce, utcTime;
-
-	private Map<DeviceSubclass,String> uriMap=new HashMap<>();
-
 	private ISoapClient client;
-
-	private BaseService baseService;
+	private DeviceManagementService devMngtService;
 	private PtzService ptzService;
 	private MediaService mediaService;
 	private ImagingService imagingService;
 
-	
 	/**
 	 * Initializes an Onvif device, e.g. a Network Video Transmitter (NVT) with
 	 * logindata.
 	 * 
-	 * @param hostIp
+	 * @param domain
 	 *            The IP address of your device, you can also add a port but
 	 *            noch protocol (e.g. http://)
 	 * @param user
@@ -62,25 +53,16 @@ public class OnvifDevice {
 	 * @throws ConnectException
 	 *             Exception gets thrown, if device isn't accessible or invalid
 	 *             and doesn't answer to SOAP messages
-	 * @throws SOAPException 
+	 * @throws SOAPException
+	 * @throws ParserConfigurationException
+	 * @throws UnsupportedOperationException
 	 */
-	public OnvifDevice(String hostIp, String user, String password) throws ConnectException, SOAPException {
-		
-		this.domain = hostIp;
+	public OnvifDevice(String domain, String user, String password) throws Exception {
 
-		if (!isOnline()) {
-			throw new ConnectException("Host not available.");
-		}
-		uriMap.put(DeviceSubclass.BASE, "http://" + domain + "/onvif/device_service");
+		this.domain = domain;
 		this.username = user;
 		this.password = password;
-
-		this.client = new SoapClient(this);
-		this.baseService = new BaseService(this);
-		this.ptzService = new PtzService(this);
-		this.mediaService = new MediaService(this);
-		this.imagingService = new ImagingService(this);
-		
+		checkIfOnline();
 		init();
 	}
 
@@ -91,56 +73,52 @@ public class OnvifDevice {
 	 * @param hostIp
 	 *            The IP address of your device, you can also add a port but
 	 *            noch protocol (e.g. http://)
+	 * @throws ParserConfigurationException
+	 * @throws UnsupportedOperationException
 	 * @throws ConnectException
 	 *             Exception gets thrown, if device isn't accessible or invalid
 	 *             and doesn't answer to SOAP messages
-	 * @throws SOAPException 
+	 * @throws SOAPException
 	 */
-	public OnvifDevice(String hostIp) throws ConnectException, SOAPException {
+	public OnvifDevice(String hostIp) throws Exception {
 		this(hostIp, null, null);
 	}
 
 	/**
-	 * Internal function to check, if device is available and answers to ping
-	 * requests.
+	 * Internal function to check, if device is available.
+	 * @throws Exception 
 	 */
-	private boolean isOnline() {
-		String port = domain.contains(":") ? domain.substring(domain.indexOf(':') + 1) : "80";
-		String ip = domain.contains(":") ? domain.substring(0, domain.indexOf(':')) : domain;
-		
+	private void checkIfOnline() throws Exception {
 		Socket socket = null;
 		try {
+			String port = domain.contains(":") ? domain.substring(domain.indexOf(':') + 1) : "80";
+			String ip = domain.contains(":") ? domain.substring(0, domain.indexOf(':')) : domain;
 			SocketAddress sockaddr = new InetSocketAddress(ip, new Integer(port));
 			socket = new Socket();
-
 			socket.connect(sockaddr, 5000);
-		}
-		catch (NumberFormatException | IOException e) {
-			return false;
-		}
-		finally {
-			try {
-				if (socket != null) {
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if(socket!=null){
+				try {
 					socket.close();
+				} catch (IOException nop) {
 				}
 			}
-			catch (IOException ex) {
-			}
 		}
-		return true;
 	}
 
 	/**
 	 * Initalizes the addresses used for SOAP messages and to get the internal
 	 * IP, if given IP is a proxy.
 	 * 
-	 * @throws ConnectException
-	 *             Get thrown if device doesn't give answers to
-	 *             GetCapabilities()
-	 * @throws SOAPException 
+	 * @throws Exception
 	 */
-	protected void init() throws ConnectException, SOAPException {
-		Capabilities capabilities = getDevices().getCapabilities();
+	protected void init() throws Exception {
+
+		this.client = new SoapClient(this);
+		this.devMngtService = new DeviceManagementService(this,client, "http://" + domain + "/onvif/device_service");
+		Capabilities capabilities = getDeviceManagementService().getCapabilities();
 
 		if (capabilities == null) {
 			throw new ConnectException("Capabilities not reachable.");
@@ -149,41 +127,43 @@ public class OnvifDevice {
 		String localDeviceUri = capabilities.getDevice().getXAddr();
 
 		if (localDeviceUri.startsWith("http://")) {
-			returnedIp = localDeviceUri.replace("http://", "");
-			returnedIp = returnedIp.substring(0, returnedIp.indexOf('/'));
-		}
-		else {
+			returnedDomain = localDeviceUri.replace("http://", "");
+			returnedDomain = returnedDomain.substring(0, returnedDomain.indexOf('/'));
+		} else {
 			throw new ConnectException("Unknown protocol");
 		}
-			
-		if (!returnedIp.equals(domain)) {
+
+		if (!returnedDomain.equals(domain)) {
 			isProxy = true;
 		}
 
 		if (capabilities.getMedia() != null && capabilities.getMedia().getXAddr() != null) {
-			uriMap.put(DeviceSubclass.MEDIA,replaceLocalIpWithProxyIp(capabilities.getMedia().getXAddr()));
+			this.mediaService = new MediaService(this,client, replaceLocalIpWithProxyIp(capabilities.getMedia().getXAddr()));
 		}
 
 		if (capabilities.getPTZ() != null && capabilities.getPTZ().getXAddr() != null) {
-			uriMap.put(DeviceSubclass.PTZ, replaceLocalIpWithProxyIp(capabilities.getPTZ().getXAddr()));
-		}
-		
-		if (capabilities.getImaging() != null && capabilities.getImaging().getXAddr() != null) {
-			uriMap.put(DeviceSubclass.IMAGING, replaceLocalIpWithProxyIp(capabilities.getImaging().getXAddr()));
+			this.ptzService = new PtzService(this,client, replaceLocalIpWithProxyIp(capabilities.getPTZ().getXAddr()));
 		}
 
-		if (capabilities.getMedia() != null && capabilities.getEvents().getXAddr() != null) {
-			uriMap.put(DeviceSubclass.EVENT, replaceLocalIpWithProxyIp(capabilities.getEvents().getXAddr()));
+		if (capabilities.getImaging() != null && capabilities.getImaging().getXAddr() != null) {
+			this.imagingService = new ImagingService(this,client,
+					replaceLocalIpWithProxyIp(capabilities.getImaging().getXAddr()));
 		}
+
+		// event uri - not used currently
+		// if (capabilities.getMedia() != null &&
+		// capabilities.getEvents().getXAddr() != null) {
+		// replaceLocalIpWithProxyIp(capabilities.getEvents().getXAddr());
+		// }
 	}
 
 	public String replaceLocalIpWithProxyIp(String original) {
 		if (original.startsWith("http:///")) {
-			original.replace("http:///", "http://"+domain);
+			original.replace("http:///", "http://" + domain);
 		}
-		
+
 		if (isProxy) {
-			return original.replace(returnedIp, domain);
+			return original.replace(returnedDomain, domain);
 		}
 		return original;
 	}
@@ -192,27 +172,24 @@ public class OnvifDevice {
 		return username;
 	}
 
-	public String getEncryptedPassword() {
+	public String getEncryptedPassword() throws NoSuchAlgorithmException {
 		return encryptPassword();
 	}
 
 	/**
-	 * Returns encrypted version of given password like algorithm like in WS-UsernameToken
+	 * Returns encrypted version of given password like algorithm like in
+	 * WS-UsernameToken
+	 * 
+	 * @throws NoSuchAlgorithmException
 	 */
-	public String encryptPassword() {
+	public String encryptPassword() throws NoSuchAlgorithmException {
 		String nonce = getNonce();
 		String timestamp = getUTCTime();
 
 		String beforeEncryption = nonce + timestamp + password;
 
 		byte[] encryptedRaw;
-		try {
-			encryptedRaw = sha1(beforeEncryption);
-		}
-		catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			return null;
-		}
+		encryptedRaw = sha1(beforeEncryption);
 		String encoded = Base64.encodeBase64String(encryptedRaw);
 		return encoded;
 	}
@@ -261,58 +238,52 @@ public class OnvifDevice {
 		return utcTime;
 	}
 
-	public ISoapClient getSoap() {
-		return client;
-	}
 
 	/**
 	 * Is used for basic devices and requests of given Onvif Device
 	 */
-	public BaseService getDevices() {
-		return baseService;
+	public DeviceManagementService getDeviceManagementService() {
+		return devMngtService;
 	}
 
 	/**
 	 * Can be used for PTZ controlling requests, may not be supported by device!
 	 */
-	public PtzService getPtz() {
+	public PtzService getPtzService() {
 		return ptzService;
 	}
 
 	/**
 	 * Can be used to get media data from OnvifDevice
+	 * 
 	 * @return
 	 */
-	public MediaService getMedia() {
+	public MediaService getMediaService() {
 		return mediaService;
 	}
 
 	/**
 	 * Can be used to get media data from OnvifDevice
+	 * 
 	 * @return
 	 */
-	public ImagingService getImaging() {
+	public ImagingService getImagingService() {
 		return imagingService;
 	}
-	
-	public Date getDate() {
-		return baseService.getDate();
-	}
-	
-	public String getName() {
-		return baseService.getDeviceInformation().getModel();
-	}
-	
-	public String getHostname() {
-		return baseService.getHostname();
-	}
-	
-	public String reboot() throws ConnectException, SOAPException {
-		return baseService.reboot();
+
+	public Date getDate() throws Exception {
+		return devMngtService.getDate();
 	}
 
-	public String getUri(DeviceSubclass type) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getModel() throws Exception {
+		return devMngtService.getDeviceInformation().getModel();
+	}
+
+	public String getHostname() throws Exception {
+		return devMngtService.getHostname();
+	}
+
+	public String reboot() throws Exception {
+		return devMngtService.reboot();
 	}
 }

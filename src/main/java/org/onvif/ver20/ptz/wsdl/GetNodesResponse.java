@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 import org.onvif.ver10.schema.PTZNode;
 
 /**
@@ -42,7 +42,7 @@ import org.onvif.ver10.schema.PTZNode;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "ptzNode" })
 @XmlRootElement(name = "GetNodesResponse")
-public class GetNodesResponse implements SoapResponse{
+public class GetNodesResponse{
 
 	@XmlElement(name = "PTZNode")
 	protected List<PTZNode> ptzNode;

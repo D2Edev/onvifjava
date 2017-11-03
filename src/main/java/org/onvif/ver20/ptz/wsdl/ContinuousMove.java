@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.Duration;
 
-import org.onvif.unofficial.soapclient.SoapRequest;
+
 import org.onvif.ver10.schema.PTZSpeed;
 
 /**
@@ -43,7 +43,7 @@ import org.onvif.ver10.schema.PTZSpeed;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "profileToken", "velocity", "timeout" })
 @XmlRootElement(name = "ContinuousMove")
-public class ContinuousMove implements SoapRequest{
+public class ContinuousMove{
 
 	@XmlElement(name = "ProfileToken", required = true)
 	protected String profileToken;

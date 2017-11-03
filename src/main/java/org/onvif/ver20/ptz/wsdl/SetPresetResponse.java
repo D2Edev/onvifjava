@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 
 /**
  * <p>
@@ -39,7 +39,7 @@ import org.onvif.unofficial.soapclient.SoapResponse;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "presetToken" })
 @XmlRootElement(name = "SetPresetResponse")
-public class SetPresetResponse implements SoapResponse{
+public class SetPresetResponse{
 
 	@XmlElement(name = "PresetToken", required = true)
 	protected String presetToken;

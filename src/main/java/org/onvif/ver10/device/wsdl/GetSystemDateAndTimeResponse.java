@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.onvif.unofficial.soapclient.SoapResponse;
+
 import org.onvif.ver10.schema.SystemDateTime;
 
 /**
@@ -40,7 +40,7 @@ import org.onvif.ver10.schema.SystemDateTime;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "systemDateAndTime" })
 @XmlRootElement(name = "GetSystemDateAndTimeResponse")
-public class GetSystemDateAndTimeResponse implements SoapResponse{
+public class GetSystemDateAndTimeResponse{
 
 	@XmlElement(name = "SystemDateAndTime", required = true)
 	protected SystemDateTime systemDateAndTime;
