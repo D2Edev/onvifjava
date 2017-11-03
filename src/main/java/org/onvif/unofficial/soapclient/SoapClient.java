@@ -1,10 +1,14 @@
 package org.onvif.unofficial.soapclient;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.soap.MessageFactory;
@@ -25,10 +29,17 @@ import org.w3c.dom.Document;
 public class SoapClient implements ISoapClient {
 
 	private OnvifDevice onvifDevice;
+	private SOAPConnectionFactory soapConnectionFactory;
+	private MessageFactory messageFactory;
+	private Map<Class<?>,Unmarshaller> unmarshallers=new HashMap<>();
+	private DocumentBuilder documentBuilder;
+	private Map<Class<?>,Marshaller> marshallers=new HashMap<>();
 
-	public SoapClient(OnvifDevice onvifDevice) {
-		super();
-
+	public SoapClient(OnvifDevice onvifDevice)
+			throws UnsupportedOperationException, SOAPException, ParserConfigurationException {
+		soapConnectionFactory = SOAPConnectionFactory.newInstance();
+		messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+		documentBuilder=DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		this.onvifDevice = onvifDevice;
 	}
 
@@ -41,16 +52,17 @@ public class SoapClient implements ISoapClient {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends SoapResponse> T processRequest(SoapRequest soapRequestElem, Class<T> responseClass,
-			String soapUri, boolean needsAuthentification)
-			throws UnsupportedOperationException, SOAPException, ParserConfigurationException, JAXBException{
+	//blocking
+	public <T extends SoapResponse> T processRequest(SoapRequest request, Class<T> responseClass,
+			String soapUri, boolean needsAuthentification) throws SOAPException, ParserConfigurationException, JAXBException
+			{
 		SOAPConnection soapConnection=null;
 		try {
-			SOAPConnectionFactory soapConnectionFactory = SOAPConnectionFactory.newInstance();
 			soapConnection = soapConnectionFactory.createConnection();
-			SOAPMessage soapMessage = processSoapMessage(soapRequestElem, needsAuthentification);
+			SOAPMessage soapMessage = processSoapMessage(request, needsAuthentification);
 			SOAPMessage soapResponse = soapConnection.call(soapMessage, soapUri);
-			Unmarshaller unmarshaller = JAXBContext.newInstance(responseClass).createUnmarshaller();
+			//get new each time? - no
+			Unmarshaller unmarshaller = getUnmarshaller(responseClass);
 			return (T) unmarshaller.unmarshal(soapResponse.getSOAPBody().extractContentAsDocument());
 		} finally {
 			if(soapConnection!=null){
@@ -60,21 +72,43 @@ public class SoapClient implements ISoapClient {
 		
 	}
 
-	protected SOAPMessage processSoapMessage(Object soapRequestElem, boolean needAuthentification)
+	private Unmarshaller getUnmarshaller(Class<?> responseClass) throws JAXBException {
+		Unmarshaller u=null;
+		if(unmarshallers.containsKey(responseClass)) {
+			u= unmarshallers.get(responseClass);
+		}else {
+			u=JAXBContext.newInstance(responseClass).createUnmarshaller();
+			unmarshallers.put(responseClass, u);
+		}
+		return u;
+	}
+
+	protected SOAPMessage processSoapMessage(Object request, boolean needAuthentification)
 			throws SOAPException, ParserConfigurationException, JAXBException {
-		MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+		//get new each time?		
+		
 		SOAPMessage soapMessage = messageFactory.createMessage();
-
-		Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		Marshaller marshaller = JAXBContext.newInstance(soapRequestElem.getClass()).createMarshaller();
-		marshaller.marshal(soapRequestElem, document);
+		Document document = documentBuilder.newDocument();
+		//get new each time?
+		Marshaller marshaller = getMarshaller(request.getClass());
+		marshaller.marshal(request, document);
 		soapMessage.getSOAPBody().addDocument(document);
-
-		// if (needAuthentification)
-		addSoapHeader(soapMessage);
-
+		if (needAuthentification) {
+			addSoapHeader(soapMessage);			
+		}
 		soapMessage.saveChanges();
 		return soapMessage;
+	}
+
+	private Marshaller getMarshaller(Class<?> requestClass) throws JAXBException {
+		Marshaller m=null;
+		if(marshallers.containsKey(requestClass)) {
+			m=marshallers.get(requestClass);
+		}else {
+			m=JAXBContext.newInstance(requestClass).createMarshaller();
+			marshallers.put(requestClass, m);
+		}
+		return m;
 	}
 
 	protected void addSoapHeader(SOAPMessage soapMessage) throws SOAPException {

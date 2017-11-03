@@ -13,6 +13,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.onvif.unofficial.soapclient.SoapResponse;
+
 /**
  * <p>
  * Java-Klasse f�r anonymous complex type.
@@ -41,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = { "manufacturer", "model", "firmwareVersion", "serialNumber", "hardwareId" })
 @XmlRootElement(name = "GetDeviceInformationResponse")
-public class GetDeviceInformationResponse {
+public class GetDeviceInformationResponse implements SoapResponse{
 
 	@XmlElement(name = "Manufacturer", required = true)
 	protected String manufacturer;

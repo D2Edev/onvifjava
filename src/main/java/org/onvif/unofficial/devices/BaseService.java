@@ -58,9 +58,9 @@ public class BaseService {
 					GetSystemDateAndTimeResponse.class, TYPE, true);
 			Date date = response.getSystemDateAndTime().getUTCDateTime().getDate();
 			Time time = response.getSystemDateAndTime().getUTCDateTime().getTime();
-			Calendar cal =new GregorianCalendar(date.getYear(), date.getMonth() - 1, date.getDay(), time.getHour(),
+			Calendar cal = new GregorianCalendar(date.getYear(), date.getMonth() - 1, date.getDay(), time.getHour(),
 					time.getMinute(), time.getSecond());
-			
+
 			return cal.getTime();
 		} catch (Exception e) {
 			return null;
@@ -69,60 +69,47 @@ public class BaseService {
 	}
 
 	public GetDeviceInformationResponse getDeviceInformation() {
-		GetDeviceInformation getHostname = new GetDeviceInformation();
-		GetDeviceInformationResponse response = new GetDeviceInformationResponse();
 		try {
-			response = (GetDeviceInformationResponse) soap.processSOAPDeviceRequest(getHostname, response, true);
-		} catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			return soap.processOnvifServiceRequest(new GetDeviceInformation(), GetDeviceInformationResponse.class, TYPE,
+					true);
+		} catch (Exception e) {
 			return null;
 		}
 
-		return response;
 	}
 
 	public String getHostname() {
-		GetHostname getHostname = new GetHostname();
-		GetHostnameResponse response = new GetHostnameResponse();
 		try {
-			response = (GetHostnameResponse) soap.processSOAPDeviceRequest(getHostname, response, true);
-		} catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			GetHostnameResponse response = soap.processOnvifServiceRequest(new GetHostname(), GetHostnameResponse.class,
+					TYPE, true);
+			return response.getHostnameInformation().getName();
+		} catch (Exception e) {
 			return null;
 		}
 
-		return response.getHostnameInformation().getName();
 	}
 
 	public boolean setHostname(String hostname) {
-		SetHostname setHostname = new SetHostname();
-		setHostname.setName(hostname);
-		SetHostnameResponse response = new SetHostnameResponse();
+		SetHostname request = new SetHostname();
+		request.setName(hostname);
 		try {
-			response = (SetHostnameResponse) soap.processSOAPDeviceRequest(setHostname, response, true);
-		} catch (SOAPException | ConnectException e) {
-			e.printStackTrace();
+			soap.processOnvifServiceRequest(request, SetHostnameResponse.class, TYPE, true);
+		} catch (Exception e) {
 			return false;
 		}
-
 		return true;
 	}
 
 	public List<User> getUsers() {
-		GetUsers getUsers = new GetUsers();
-		GetUsersResponse response = new GetUsersResponse();
 		try {
-			response = (GetUsersResponse) soap.processSOAPDeviceRequest(getUsers, response, true);
-		} catch (SOAPException | ConnectException e) {
+			GetUsersResponse response = soap.processOnvifServiceRequest(new GetUsers(), GetUsersResponse.class, TYPE,
+					true);
+			return response.getUser();
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 
-		if (response == null) {
-			return null;
-		}
-
-		return response.getUser();
 	}
 
 	public Capabilities getCapabilities() throws ConnectException, SOAPException {
