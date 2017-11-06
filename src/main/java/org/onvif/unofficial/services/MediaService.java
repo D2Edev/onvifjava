@@ -1,15 +1,12 @@
 package org.onvif.unofficial.services;
 
-import java.net.ConnectException;
 import java.util.List;
 
-import javax.xml.soap.SOAPException;
 
 import org.onvif.unofficial.OnvifDevice;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.media.wsdl.CreateProfile;
 import org.onvif.ver10.media.wsdl.CreateProfileResponse;
-import org.onvif.ver10.media.wsdl.GetOSD;
 import org.onvif.ver10.media.wsdl.GetOSDs;
 import org.onvif.ver10.media.wsdl.GetOSDsResponse;
 import org.onvif.ver10.media.wsdl.GetProfile;
@@ -31,7 +28,6 @@ import org.onvif.ver10.media.wsdl.GetVideoSourcesResponse;
 import org.onvif.ver10.media.wsdl.SetVideoEncoderConfiguration;
 import org.onvif.ver10.media.wsdl.SetVideoEncoderConfigurationResponse;
 import org.onvif.ver10.schema.OSDConfiguration;
-import org.onvif.ver10.schema.OSDConfigurationOptions;
 import org.onvif.ver10.schema.Profile;
 import org.onvif.ver10.schema.StreamSetup;
 import org.onvif.ver10.schema.StreamType;
@@ -79,7 +75,7 @@ public class MediaService extends AbstractService {
 		StreamSetup setup = new StreamSetup();
 		setup.setStream(StreamType.RTP_UNICAST);
 		Transport transport = new Transport();
-		transport.setProtocol(TransportProtocol.TCP);
+		transport.setProtocol(TransportProtocol.RTSP);
 		setup.setTransport(transport);
 		return getStreamUri(profileToken, setup);
 	}

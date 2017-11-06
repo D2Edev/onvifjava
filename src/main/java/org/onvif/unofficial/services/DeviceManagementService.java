@@ -10,8 +10,15 @@ import org.onvif.ver10.device.wsdl.GetCapabilities;
 import org.onvif.ver10.device.wsdl.GetCapabilitiesResponse;
 import org.onvif.ver10.device.wsdl.GetDeviceInformation;
 import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
+import org.onvif.ver10.device.wsdl.GetDot11Capabilities;
+import org.onvif.ver10.device.wsdl.GetDot11CapabilitiesResponse;
+import org.onvif.ver10.device.wsdl.GetDot1XConfigurationResponse;
+import org.onvif.ver10.device.wsdl.GetDot1XConfigurations;
+import org.onvif.ver10.device.wsdl.GetDot1XConfigurationsResponse;
 import org.onvif.ver10.device.wsdl.GetHostname;
 import org.onvif.ver10.device.wsdl.GetHostnameResponse;
+import org.onvif.ver10.device.wsdl.GetNetworkInterfaces;
+import org.onvif.ver10.device.wsdl.GetNetworkInterfacesResponse;
 import org.onvif.ver10.device.wsdl.GetScopes;
 import org.onvif.ver10.device.wsdl.GetScopesResponse;
 import org.onvif.ver10.device.wsdl.GetServices;
@@ -27,11 +34,14 @@ import org.onvif.ver10.device.wsdl.SystemReboot;
 import org.onvif.ver10.device.wsdl.SystemRebootResponse;
 import org.onvif.ver10.schema.Capabilities;
 import org.onvif.ver10.schema.Date;
+import org.onvif.ver10.schema.Dot11Capabilities;
+import org.onvif.ver10.schema.Dot1XConfiguration;
+import org.onvif.ver10.schema.NetworkInterface;
 import org.onvif.ver10.schema.Scope;
 import org.onvif.ver10.schema.Time;
 import org.onvif.ver10.schema.User;
 
-public class DeviceManagementService extends AbstractService{
+public class DeviceManagementService extends AbstractService {
 
 	public DeviceManagementService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
 		super(onvifDevice, client, serviceUrl);
@@ -48,13 +58,12 @@ public class DeviceManagementService extends AbstractService{
 	}
 
 	public GetDeviceInformationResponse getDeviceInformation() throws Exception {
-		return client.processRequest(new GetDeviceInformation(), GetDeviceInformationResponse.class, serviceUrl,
-				true);
+		return client.processRequest(new GetDeviceInformation(), GetDeviceInformationResponse.class, serviceUrl, true);
 	}
 
 	public String getHostname() throws Exception {
-		GetHostnameResponse response = client.processRequest(new GetHostname(), GetHostnameResponse.class,
-				serviceUrl, true);
+		GetHostnameResponse response = client.processRequest(new GetHostname(), GetHostnameResponse.class, serviceUrl,
+				true);
 		return response.getHostnameInformation().getName();
 	}
 
@@ -86,8 +95,7 @@ public class DeviceManagementService extends AbstractService{
 	}
 
 	public List<Scope> getScopes() throws Exception {
-		GetScopesResponse response = client.processRequest(new GetScopes(), GetScopesResponse.class, serviceUrl,
-				true);
+		GetScopesResponse response = client.processRequest(new GetScopes(), GetScopesResponse.class, serviceUrl, true);
 		if (response == null) {
 			return null;
 		}
@@ -101,5 +109,30 @@ public class DeviceManagementService extends AbstractService{
 			return null;
 		}
 		return response.getMessage();
+	}
+
+	public List<NetworkInterface> getNetworkInterfaces() throws Exception {
+		GetNetworkInterfacesResponse response = client.processRequest(new GetNetworkInterfaces(),
+				GetNetworkInterfacesResponse.class, serviceUrl, true);
+		if (response == null)
+			return null;
+		return response.getNetworkInterfaces();
+
+	}
+
+	public Dot11Capabilities getDot11Capabilities() throws Exception {
+		GetDot11CapabilitiesResponse response = client.processRequest(new GetDot11Capabilities(),
+				GetDot11CapabilitiesResponse.class, serviceUrl, true);
+		if (response == null)
+			return null;
+		return response.getCapabilities();
+	}
+
+	public List<Dot1XConfiguration> getDot1XConfigurations() throws Exception {
+		GetDot1XConfigurationsResponse response = client.processRequest(new GetDot1XConfigurations(),
+				GetDot1XConfigurationsResponse.class, serviceUrl, true);
+		if (response == null)
+			return null;
+		return response.getDot1XConfiguration();
 	}
 }
