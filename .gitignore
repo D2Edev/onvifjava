@@ -12,6 +12,9 @@
 # BlueJ files
 *.ctxt
 
+#configuration
+*.properties
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
