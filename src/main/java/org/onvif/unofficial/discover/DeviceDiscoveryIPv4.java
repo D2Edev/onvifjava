@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -100,6 +101,8 @@ public class DeviceDiscoveryIPv4 {
 	}
 
 	public static class DiscoverTask implements Runnable {
+		
+		final String uuid = UUID.randomUUID().toString();
 
 		public DiscoverTask(InetAddress inetAddress, List<URL> discovered) {
 			// TODO Auto-generated constructor stub

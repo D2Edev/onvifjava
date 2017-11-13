@@ -12,7 +12,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import org.w3.xop.include.Include;
+
+import org.w3._2004._08.xop.include.Include;
 
 /**
  * <p>
