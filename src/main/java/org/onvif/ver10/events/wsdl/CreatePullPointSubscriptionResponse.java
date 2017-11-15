@@ -18,7 +18,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
-import org.w3.addressing.EndpointReferenceType;
+
+import org.w3._2005._08.addressing.EndpointReferenceType;
 import org.w3c.dom.Element;
 
 
