@@ -17,8 +17,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -57,9 +59,9 @@ public class CameraDiscovery {
 	public static final String WS_DISCOVERY_ADDRESS_IPv4 = "239.255.255.250";
 	private static final Random random = new SecureRandom();
 
-	public List<URL> getDiscoveredDevices(String interfaceName) throws SocketException, InterruptedException {
+	public Set<URL> getDiscoveredDevices(String interfaceName) throws SocketException, InterruptedException {
 		Collection<InetAddress> addresses = getAvailableAddresses(interfaceName);
-		List<URL> discovered = Collections.synchronizedList(new ArrayList<>());
+		Set<URL> discovered = Collections.synchronizedSet(new HashSet<>());
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		for (InetAddress inetAddress : addresses) {
 			int port = random.nextInt(20000) + 40000;
@@ -114,11 +116,11 @@ public class CameraDiscovery {
 		final String uuid = UUID.randomUUID().toString();
 		private InetAddress inetAddress;
 		private int port;
-		private List<URL> discovered;
+		private Set<URL> discovered;
 		CountDownLatch serverStartFlag = new CountDownLatch(1);
 		CountDownLatch serverStopFlag = new CountDownLatch(1);
 
-		public DiscoverTask(InetAddress inetAddress, int port, List<URL> discovered) {
+		public DiscoverTask(InetAddress inetAddress, int port, Set<URL> discovered) {
 			this.inetAddress = inetAddress;
 			this.port = port;
 			this.discovered = discovered;
@@ -247,7 +249,7 @@ public class CameraDiscovery {
 	public static void main(String[] args) {
 		CameraDiscovery d = new CameraDiscovery();
 		try {
-			List<URL> urls=d.getDiscoveredDevices(null);
+			Set<URL> urls=d.getDiscoveredDevices(null);
 			for (URL url : urls) {
 				System.out.println(url);
 			}

@@ -31,8 +31,8 @@ public class TestHelper {
 		Properties props = new Properties();
 		try {
 			// you should create your own props file for test
-			 propStream = new FileInputStream("test.hkv.properties");
-//			propStream = new FileInputStream("test.wcam.properties");
+			 propStream = new FileInputStream("test.hkv2.properties");
+//			propStream = new FileInputStream("test.wcam2.properties");
 			props.load(propStream);
 			String address = props.getProperty("address");
 			String login = props.getProperty("login");
@@ -146,27 +146,12 @@ public class TestHelper {
 	@Test
 	public void testNetwork() {
 		Object val;
-		try {
-			List<Dot1XConfiguration> confs = device.getDeviceManagementService().getDot1XConfigurations();
-			System.out.println(confs.size());
-			for (Dot1XConfiguration dot1xConfiguration : confs) {
-				System.out.println(dot1xConfiguration.getAnonymousID());
-			}
-		} catch (Exception e) {
-			System.out.println("Error getting Dot1XConfiguration");
-		}
-		try {
-			System.out.println(device.getDeviceManagementService().getCapabilities().getDevice().getNetwork().getExtension().isDot11Configuration());
-			
-		} catch (Exception e) {
-			System.out.println("Error getting isDot11Configuration");
-		}
-		try {
+				try {
 			List<NetworkInterface> ifaces = device.getDeviceManagementService().getNetworkInterfaces();
 			for (NetworkInterface networkInterface : ifaces) {
 				System.out.println("interface name: " + networkInterface.getInfo().getName());
 				try {
-					val = networkInterface.getIPv4().getConfig();
+					val = networkInterface.getInfo().getHwAddress();
 					System.out.println(val);
 					
 				} catch (Exception e) {
