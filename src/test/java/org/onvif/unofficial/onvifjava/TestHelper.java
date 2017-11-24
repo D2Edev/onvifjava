@@ -31,8 +31,9 @@ public class TestHelper {
 		Properties props = new Properties();
 		try {
 			// you should create your own props file for test
-			 propStream = new FileInputStream("test.hkv2.properties");
+//			 propStream = new FileInputStream("test.hkv2.properties");
 //			propStream = new FileInputStream("test.wcam2.properties");
+			propStream = new FileInputStream("test.wcam.properties");
 			props.load(propStream);
 			String address = props.getProperty("address");
 			String login = props.getProperty("login");
