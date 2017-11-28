@@ -30,15 +30,20 @@ import org.onvif.ver10.device.wsdl.GetUsersResponse;
 import org.onvif.ver10.device.wsdl.Service;
 import org.onvif.ver10.device.wsdl.SetHostname;
 import org.onvif.ver10.device.wsdl.SetHostnameResponse;
+import org.onvif.ver10.device.wsdl.SetSystemDateAndTime;
+import org.onvif.ver10.device.wsdl.SetSystemDateAndTimeResponse;
 import org.onvif.ver10.device.wsdl.SystemReboot;
 import org.onvif.ver10.device.wsdl.SystemRebootResponse;
 import org.onvif.ver10.schema.Capabilities;
 import org.onvif.ver10.schema.Date;
+import org.onvif.ver10.schema.DateTime;
 import org.onvif.ver10.schema.Dot11Capabilities;
 import org.onvif.ver10.schema.Dot1XConfiguration;
 import org.onvif.ver10.schema.NetworkInterface;
 import org.onvif.ver10.schema.Scope;
+import org.onvif.ver10.schema.SetDateTimeType;
 import org.onvif.ver10.schema.Time;
+import org.onvif.ver10.schema.TimeZone;
 import org.onvif.ver10.schema.User;
 
 public class DeviceManagementService extends AbstractService {
@@ -57,6 +62,28 @@ public class DeviceManagementService extends AbstractService {
 		return cal.getTime();
 	}
 
+	public void setSystemDateAndTime(Calendar calendar) throws Exception{
+		SetSystemDateAndTime request=new SetSystemDateAndTime();
+		request.setDateTimeType(SetDateTimeType.MANUAL);
+		request.setDaylightSavings(calendar.getTimeZone().useDaylightTime());
+		TimeZone tz= new TimeZone();
+		tz.setTZ(calendar.getTimeZone().getID());
+		request.setTimeZone(tz);
+		DateTime dt=new DateTime();
+		Date d=new Date();
+		d.setDay(calendar.get(Calendar.DAY_OF_MONTH));
+		d.setMonth(calendar.get(Calendar.MONTH));
+		d.setYear(calendar.get(Calendar.YEAR));
+		dt.setDate(d);
+		Time t=new Time();
+		t.setHour(calendar.get(Calendar.HOUR));
+		t.setMinute(calendar.get(Calendar.MINUTE));
+		t.setSecond(calendar.get(Calendar.SECOND));
+		dt.setTime(t);
+		request.setUTCDateTime(dt);
+		client.processRequest(request, SetSystemDateAndTimeResponse.class, serviceUrl, true);
+	}
+	
 	public GetDeviceInformationResponse getDeviceInformation() throws Exception {
 		return client.processRequest(new GetDeviceInformation(), GetDeviceInformationResponse.class, serviceUrl, true);
 	}

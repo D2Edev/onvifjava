@@ -45,7 +45,7 @@ public class TestHelper {
 		}
 	}
 
-	// @Test
+	 @Test
 	public void getCamData() {
 		if (device == null)
 			fail();
