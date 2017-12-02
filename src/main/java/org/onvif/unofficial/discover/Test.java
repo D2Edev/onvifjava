@@ -48,7 +48,7 @@ public static void main(String[] args) {
 		SOAPBody body = envelope.getBody();
 		SOAPElement probeEl=body.addChildElement(probe);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		message.writeTo(out);
+		message.writeTo(System.out);
 		
 		
 	} catch (SOAPException e) {

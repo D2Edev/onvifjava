@@ -60,6 +60,11 @@ public class CameraDiscovery {
 	private static final Random random = new SecureRandom();
 
 	public Set<URL> getDiscoveredDevices(String interfaceName) throws SocketException, InterruptedException {
+		return getDiscoveredDevices(interfaceName, WS_DISCOVERY_TIMEOUT);
+
+	}
+	
+	public Set<URL> getDiscoveredDevices(String interfaceName, int timeout) throws SocketException, InterruptedException {
 		Collection<InetAddress> addresses = getAvailableAddresses(interfaceName);
 		Set<URL> discovered = Collections.synchronizedSet(new HashSet<>());
 		ExecutorService executorService = Executors.newCachedThreadPool();
@@ -69,9 +74,8 @@ public class CameraDiscovery {
 			executorService.submit(task);
 		}
 		executorService.shutdown();
-		executorService.awaitTermination(WS_DISCOVERY_TIMEOUT, TimeUnit.MILLISECONDS);
+		executorService.awaitTermination(timeout, TimeUnit.MILLISECONDS);
 		return discovered;
-
 	}
 
 	private Collection<InetAddress> getAvailableAddresses(String interfaceName) throws SocketException {
@@ -261,5 +265,16 @@ public class CameraDiscovery {
 			e.printStackTrace();
 		}
 	}
+
+	public static Set<URL> getURLs(String interfaceName) throws SocketException, InterruptedException {
+		CameraDiscovery d = new CameraDiscovery();
+		return d.getDiscoveredDevices(interfaceName);
+	}
+	
+	public static Set<URL> getURLs(String interfaceName, int timeout) throws SocketException, InterruptedException {
+		CameraDiscovery d = new CameraDiscovery();
+		return d.getDiscoveredDevices(interfaceName,timeout);
+	}
+
 	
 }
