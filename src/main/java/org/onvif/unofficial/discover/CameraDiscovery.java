@@ -70,7 +70,7 @@ public class CameraDiscovery {
 		ExecutorService executorService = Executors.newCachedThreadPool();
 		for (InetAddress inetAddress : addresses) {
 			int port = random.nextInt(20000) + 40000;
-			DiscoverTask task = new DiscoverTask(inetAddress, port, discovered);
+			DiscoverTask task = new DiscoverTask(inetAddress, port, discovered,timeout);
 			executorService.submit(task);
 		}
 		executorService.shutdown();
@@ -123,11 +123,13 @@ public class CameraDiscovery {
 		private Set<URL> discovered;
 		CountDownLatch serverStartFlag = new CountDownLatch(1);
 		CountDownLatch serverStopFlag = new CountDownLatch(1);
+		private int timeout;
 
-		public DiscoverTask(InetAddress inetAddress, int port, Set<URL> discovered) {
+		public DiscoverTask(InetAddress inetAddress, int port, Set<URL> discovered, int timeout) {
 			this.inetAddress = inetAddress;
 			this.port = port;
 			this.discovered = discovered;
+			this.timeout=timeout;
 		}
 
 		@Override
@@ -138,10 +140,10 @@ public class CameraDiscovery {
 					@Override
 					public void run() {
 						try {
-							server.setSoTimeout(WS_DISCOVERY_TIMEOUT);
+							server.setSoTimeout(timeout);;
 							long timerStarted = System.currentTimeMillis();
 							DatagramPacket packet = new DatagramPacket(new byte[4096], 4096);
-							while (System.currentTimeMillis() - timerStarted < WS_DISCOVERY_TIMEOUT) {
+							while (System.currentTimeMillis() - timerStarted < timeout) {
 								serverStartFlag.countDown();
 								server.receive(packet);
 								parseSoapResponseForUrls(Arrays.copyOf(packet.getData(), packet.getLength()));
@@ -170,7 +172,7 @@ public class CameraDiscovery {
 					DatagramPacket probe = new DatagramPacket(content, content.length,
 							InetAddress.getByName(WS_DISCOVERY_ADDRESS_IPv4), WS_DISCOVERY_PORT);
 					server.send(probe);
-					serverStopFlag.await(WS_DISCOVERY_TIMEOUT,TimeUnit.MILLISECONDS);
+					serverStopFlag.await(timeout,TimeUnit.MILLISECONDS);
 				} catch (SOAPException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -253,7 +255,7 @@ public class CameraDiscovery {
 	public static void main(String[] args) {
 		CameraDiscovery d = new CameraDiscovery();
 		try {
-			Set<URL> urls=d.getDiscoveredDevices(null);
+			Set<URL> urls=d.getDiscoveredDevices(null,1000);
 			for (URL url : urls) {
 				System.out.println(url);
 			}
