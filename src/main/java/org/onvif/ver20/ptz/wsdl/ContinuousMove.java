@@ -14,7 +14,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.Duration;
 
-
 import org.onvif.ver10.schema.PTZSpeed;
 
 /**

@@ -12,7 +12,6 @@ import org.onvif.ver10.device.wsdl.GetDeviceInformation;
 import org.onvif.ver10.device.wsdl.GetDeviceInformationResponse;
 import org.onvif.ver10.device.wsdl.GetDot11Capabilities;
 import org.onvif.ver10.device.wsdl.GetDot11CapabilitiesResponse;
-import org.onvif.ver10.device.wsdl.GetDot1XConfigurationResponse;
 import org.onvif.ver10.device.wsdl.GetDot1XConfigurations;
 import org.onvif.ver10.device.wsdl.GetDot1XConfigurationsResponse;
 import org.onvif.ver10.device.wsdl.GetHostname;

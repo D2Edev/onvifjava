@@ -9,11 +9,13 @@ package org.onvif.ver10.schema;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.namespace.QName;
+
 import org.oasis.open.docs.wsn.b_2.FilterType;
 
 /**

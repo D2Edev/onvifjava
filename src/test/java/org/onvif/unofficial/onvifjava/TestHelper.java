@@ -1,6 +1,7 @@
 package org.onvif.unofficial.onvifjava;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,7 +13,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.onvif.unofficial.OnvifDevice;
-import org.onvif.ver10.schema.Dot1XConfiguration;
 import org.onvif.ver10.schema.NetworkInterface;
 import org.onvif.ver10.schema.Profile;
 import org.onvif.ver10.schema.VideoEncoderConfiguration;

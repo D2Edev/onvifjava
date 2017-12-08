@@ -3,6 +3,7 @@ package org.oasis.open.docs.wsn.bw_2;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
 import javax.xml.ws.WebEndpoint;
