@@ -1,14 +1,14 @@
 package org.onvif.unofficial.services;
 
-import org.onvif.unofficial.OnvifDevice;
+import org.onvif.unofficial.NetOnvifDevice;
 import org.onvif.unofficial.soapclient.ISoapClient;
 
-public abstract class AbstractService {
-	protected OnvifDevice onvifDevice;
+public abstract class ServiceBase {
+	protected NetOnvifDevice onvifDevice;
 	protected ISoapClient client;
 	protected String serviceUrl;
 
-	public AbstractService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
+	public ServiceBase(NetOnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
 		super();
 		this.onvifDevice = onvifDevice;
 		this.client = client;

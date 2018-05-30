@@ -2,7 +2,8 @@ package org.onvif.unofficial.services;
 
 import java.util.List;
 
-import org.onvif.unofficial.OnvifDevice;
+import org.onvif.unofficial.NetOnvifDevice;
+import org.onvif.unofficial.api.MediaService;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.media.wsdl.CreateProfile;
 import org.onvif.ver10.media.wsdl.CreateProfileResponse;
@@ -37,12 +38,16 @@ import org.onvif.ver10.schema.VideoEncoderConfigurationOptions;
 import org.onvif.ver10.schema.VideoSource;
 import org.onvif.ver10.schema.VideoSourceConfiguration;
 
-public class MediaService extends AbstractService {
+public class NetMediaService extends ServiceBase implements MediaService {
 
-	public MediaService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
+	public NetMediaService(NetOnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
 		super(onvifDevice, client, serviceUrl);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getHTTPStreamUri(java.lang.String)
+	 */
+	@Override
 	public String getHTTPStreamUri(String profileToken) throws Exception {
 		StreamSetup setup = new StreamSetup();
 		setup.setStream(StreamType.RTP_UNICAST);
@@ -52,6 +57,10 @@ public class MediaService extends AbstractService {
 		return getStreamUri(profileToken, setup);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getUDPStreamUri(java.lang.String)
+	 */
+	@Override
 	public String getUDPStreamUri(String profileToken) throws Exception {
 		StreamSetup setup = new StreamSetup();
 		setup.setStream(StreamType.RTP_UNICAST);
@@ -61,6 +70,10 @@ public class MediaService extends AbstractService {
 		return getStreamUri(profileToken, setup);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getTCPStreamUri(java.lang.String)
+	 */
+	@Override
 	public String getTCPStreamUri(String profileToken) throws Exception {
 		StreamSetup setup = new StreamSetup();
 		setup.setStream(StreamType.RTP_UNICAST);
@@ -70,6 +83,10 @@ public class MediaService extends AbstractService {
 		return getStreamUri(profileToken, setup);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getRTSPStreamUri(java.lang.String)
+	 */
+	@Override
 	public String getRTSPStreamUri(String profileToken) throws Exception {
 		StreamSetup setup = new StreamSetup();
 		setup.setStream(StreamType.RTP_UNICAST);
@@ -79,6 +96,10 @@ public class MediaService extends AbstractService {
 		return getStreamUri(profileToken, setup);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getStreamUri(java.lang.String, org.onvif.ver10.schema.StreamSetup)
+	 */
+	@Override
 	public String getStreamUri(String profileToken, StreamSetup streamSetup) throws Exception {
 		GetStreamUri request = new GetStreamUri();
 		request.setProfileToken(profileToken);
@@ -95,6 +116,10 @@ public class MediaService extends AbstractService {
 		return profile.getVideoEncoderConfiguration();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getVideoEncoderConfigurationOptions(java.lang.String)
+	 */
+	@Override
 	public VideoEncoderConfigurationOptions getVideoEncoderConfigurationOptions(String profileToken) throws Exception {
 		GetVideoEncoderConfigurationOptions request = new GetVideoEncoderConfigurationOptions();
 		request.setProfileToken(profileToken);
@@ -106,6 +131,10 @@ public class MediaService extends AbstractService {
 		return response.getOptions();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#setVideoEncoderConfiguration(org.onvif.ver10.schema.VideoEncoderConfiguration)
+	 */
+	@Override
 	public boolean setVideoEncoderConfiguration(VideoEncoderConfiguration videoEncoderConfiguration) throws Exception {
 		SetVideoEncoderConfiguration request = new SetVideoEncoderConfiguration();
 		request.setConfiguration(videoEncoderConfiguration);
@@ -118,6 +147,10 @@ public class MediaService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getSnapshotUri(java.lang.String)
+	 */
+	@Override
 	public String getSnapshotUri(String profileToken) throws Exception {
 		GetSnapshotUri request = new GetSnapshotUri();
 		request.setProfileToken(profileToken);
@@ -129,6 +162,10 @@ public class MediaService extends AbstractService {
 		return onvifDevice.replaceLocalIpWithProxyIp(response.getMediaUri().getUri());
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getVideoSources()
+	 */
+	@Override
 	public List<VideoSource> getVideoSources() throws Exception {
 		GetVideoSources request = new GetVideoSources();
 		GetVideoSourcesResponse response = client.processRequest(request, GetVideoSourcesResponse.class, serviceUrl,
@@ -139,10 +176,18 @@ public class MediaService extends AbstractService {
 		return response.getVideoSources();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getProfiles()
+	 */
+	@Override
 	public List<Profile> getProfiles() throws Exception {
 		return client.processRequest(new GetProfiles(), GetProfilesResponse.class, serviceUrl, true).getProfiles();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getProfile(java.lang.String)
+	 */
+	@Override
 	public Profile getProfile(String profileToken) throws Exception {
 		GetProfile request = new GetProfile();
 		request.setProfileToken(profileToken);
@@ -153,6 +198,10 @@ public class MediaService extends AbstractService {
 		return response.getProfile();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#createProfile(java.lang.String)
+	 */
+	@Override
 	public Profile createProfile(String name) throws Exception {
 		CreateProfile request = new CreateProfile();
 		request.setName(name);
@@ -165,6 +214,10 @@ public class MediaService extends AbstractService {
 	}
 	
 	
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getOSDs(java.lang.String)
+	 */
+	@Override
 	public List<OSDConfiguration> getOSDs(String videoSourceConfigurationToken) throws Exception{
 		GetOSDs request=new GetOSDs();
 		request.setConfigurationToken(videoSourceConfigurationToken);
@@ -173,12 +226,20 @@ public class MediaService extends AbstractService {
 		return response.getOSDs();
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getVideoSourceConfigurations()
+	 */
+	@Override
 	public List<VideoSourceConfiguration> getVideoSourceConfigurations() throws Exception{
 		GetVideoSourceConfigurationsResponse response= client.processRequest(new GetVideoSourceConfigurations(), GetVideoSourceConfigurationsResponse.class, serviceUrl, true);
 		if(response==null)return null;
 		return response.getConfigurations();
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.MediaService#getVideoSourceConfiguration(java.lang.String)
+	 */
+	@Override
 	public VideoSourceConfiguration getVideoSourceConfiguration(String configToken) throws Exception{
 		GetVideoSourceConfiguration request=new GetVideoSourceConfiguration();
 		request.setConfigurationToken(configToken);

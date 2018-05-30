@@ -1,8 +1,16 @@
 package org.onvif.unofficial.soapclient;
 
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.SimpleTimeZone;
+import java.util.TimeZone;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -21,22 +29,23 @@ import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 
-import org.onvif.unofficial.OnvifDevice;
 import org.w3c.dom.Document;
 
 public class SoapClient implements ISoapClient {
 
-	private OnvifDevice onvifDevice;
+//	private NetOnvifDevice onvifDevice;
 	private SOAPConnectionFactory soapConnectionFactory;
 	private MessageFactory messageFactory;
 	private Map<Class<?>, Unmarshaller> unmarshallers = new HashMap<>();
 	private DocumentBuilder documentBuilder;
 	private Map<Class<?>, Marshaller> marshallers = new HashMap<>();
+	private String username;
+	private String password;
+	private String nonce;
 
-	public SoapClient(OnvifDevice device) throws Exception {
-		if (device == null)
-			throw new IllegalArgumentException("Device can't be null");
-		this.onvifDevice = device;
+	public SoapClient(String username, String password) throws Exception {
+		this.username=username;
+		this.password=password;
 		soapConnectionFactory = SOAPConnectionFactory.newInstance();
 		messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
 		documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -80,9 +89,9 @@ public class SoapClient implements ISoapClient {
 	}
 
 	protected void addSoapHeader(SOAPMessage soapMessage) throws SOAPException, NoSuchAlgorithmException {
-		onvifDevice.createNonce();
-		String encrypedPassword = onvifDevice.getEncryptedPassword();
-		if (encrypedPassword != null && onvifDevice.getUsername() != null) {
+		createNonce();
+		String encrypedPassword = getEncryptedPassword();
+		if (encrypedPassword != null && username != null) {
 
 			SOAPPart sp = soapMessage.getSOAPPart();
 			SOAPEnvelope se = sp.getEnvelope();
@@ -98,7 +107,7 @@ public class SoapClient implements ISoapClient {
 			SOAPElement usernameTokenElem = securityElem.addChildElement("UsernameToken", "wsse");
 
 			SOAPElement usernameElem = usernameTokenElem.addChildElement("Username", "wsse");
-			usernameElem.setTextContent(onvifDevice.getUsername());
+			usernameElem.setTextContent(username);
 
 			SOAPElement passwordElem = usernameTokenElem.addChildElement("Password", "wsse");
 			passwordElem.setAttribute("Type",
@@ -108,10 +117,10 @@ public class SoapClient implements ISoapClient {
 			SOAPElement nonceElem = usernameTokenElem.addChildElement("Nonce", "wsse");
 			nonceElem.setAttribute("EncodingType",
 					"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary");
-			nonceElem.setTextContent(onvifDevice.getEncryptedNonce());
+			nonceElem.setTextContent(getEncryptedNonce());
 
 			SOAPElement createdElem = usernameTokenElem.addChildElement("Created", "wsu");
-			createdElem.setTextContent(onvifDevice.getLastUTCTime());
+			createdElem.setTextContent(getUTCTime());
 		}
 	}
 
@@ -137,4 +146,57 @@ public class SoapClient implements ISoapClient {
 		return u;
 	}
 
+
+	private String getEncryptedNonce() {
+		if (nonce == null) {
+			createNonce();
+		}
+		return Base64.getEncoder().encodeToString(nonce.getBytes());
+	}
+
+	private void createNonce() {
+		Random generator = new Random();
+		nonce = "" + generator.nextInt();
+	}
+	
+	public String getEncryptedPassword() throws NoSuchAlgorithmException {
+		return encryptPassword();
+	}
+
+	/**
+	 * Returns encrypted version of given password like algorithm like in
+	 * WS-UsernameToken
+	 * 
+	 * @throws NoSuchAlgorithmException
+	 */
+	public String encryptPassword() throws NoSuchAlgorithmException {
+		String timestamp = getUTCTime();
+		String beforeEncryption = nonce + timestamp + password;
+		byte[] encryptedRaw;
+		encryptedRaw = sha1(beforeEncryption);
+//		String encoded = Base64.encodeBase64String(encryptedRaw);
+		String encoded = Base64.getEncoder().encodeToString(encryptedRaw);
+		return encoded;
+	}
+
+	public String getUTCTime() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-d'T'HH:mm:ss'Z'");
+		sdf.setTimeZone(new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC"));
+
+		Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+		String utcTime = sdf.format(cal.getTime());
+		return utcTime;
+	}
+	
+
+	private static byte[] sha1(String s) throws NoSuchAlgorithmException {
+		MessageDigest SHA1 = null;
+		SHA1 = MessageDigest.getInstance("SHA1");
+	
+		SHA1.reset();
+		SHA1.update(s.getBytes());
+	
+		byte[] encryptedRaw = SHA1.digest();
+		return encryptedRaw;
+	}
 }

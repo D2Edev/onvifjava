@@ -2,7 +2,8 @@ package org.onvif.unofficial.services;
 
 import java.util.List;
 
-import org.onvif.unofficial.OnvifDevice;
+import org.onvif.unofficial.NetOnvifDevice;
+import org.onvif.unofficial.api.PTZService;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.schema.FloatRange;
 import org.onvif.ver10.schema.PTZConfiguration;
@@ -40,21 +41,24 @@ import org.onvif.ver20.ptz.wsdl.SetPresetResponse;
 import org.onvif.ver20.ptz.wsdl.Stop;
 import org.onvif.ver20.ptz.wsdl.StopResponse;
 
-public class PtzService extends AbstractService {
+public class NetPTZService extends ServiceBase implements PTZService {
 
-	public PtzService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
+	public NetPTZService(NetOnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
 		super(onvifDevice, client, serviceUrl);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#isPtzOperationsSupported(java.lang.String)
+	 */
+	@Override
 	public boolean isPtzOperationsSupported(String profileToken) throws Exception {
 		return getPTZConfiguration(profileToken) != null;
 	}
 
-	/**
-	 * @param profileToken
-	 * @return If is null, PTZ operations are not supported
-	 * @throws Exception
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getPTZConfiguration(java.lang.String)
 	 */
+	@Override
 	public PTZConfiguration getPTZConfiguration(String profileToken) throws Exception {
 		if (profileToken == null || profileToken.equals("")) {
 			return null;
@@ -70,6 +74,10 @@ public class PtzService extends AbstractService {
 		return profile.getPTZConfiguration();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getNodes()
+	 */
+	@Override
 	public List<PTZNode> getNodes() throws Exception {
 		GetNodesResponse response = client.processRequest(new GetNodes(), GetNodesResponse.class, serviceUrl, true);
 		if (response == null)
@@ -77,10 +85,18 @@ public class PtzService extends AbstractService {
 		return response.getPTZNode();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getNode(java.lang.String)
+	 */
+	@Override
 	public PTZNode getNode(String profileToken) throws Exception {
 		return getNode(getPTZConfiguration(profileToken));
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getNode(org.onvif.ver10.schema.PTZConfiguration)
+	 */
+	@Override
 	public PTZNode getNode(PTZConfiguration ptzConfiguration) throws Exception {
 		GetNode request = new GetNode();
 		if (ptzConfiguration == null) {
@@ -93,6 +109,10 @@ public class PtzService extends AbstractService {
 		return response.getPTZNode();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getPanSpaces(java.lang.String)
+	 */
+	@Override
 	public FloatRange getPanSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
@@ -100,6 +120,10 @@ public class PtzService extends AbstractService {
 		return ptzSpaces.getAbsolutePanTiltPositionSpace().get(0).getXRange();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getTiltSpaces(java.lang.String)
+	 */
+	@Override
 	public FloatRange getTiltSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
@@ -107,6 +131,10 @@ public class PtzService extends AbstractService {
 		return ptzSpaces.getAbsolutePanTiltPositionSpace().get(0).getYRange();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getZoomSpaces(java.lang.String)
+	 */
+	@Override
 	public FloatRange getZoomSpaces(String profileToken) throws Exception {
 		PTZNode node = getNode(profileToken);
 
@@ -114,6 +142,10 @@ public class PtzService extends AbstractService {
 		return ptzSpaces.getAbsoluteZoomPositionSpace().get(0).getXRange();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#isAbsoluteMoveSupported(java.lang.String)
+	 */
+	@Override
 	public boolean isAbsoluteMoveSupported(String profileToken) throws Exception {
 		Profile profile = onvifDevice.getMediaService().getProfile(profileToken);
 		if (profile.getPTZConfiguration().getDefaultAbsolutePantTiltPositionSpace() != null) {
@@ -122,18 +154,10 @@ public class PtzService extends AbstractService {
 		return false;
 	}
 
-	/**
-	 * 
-	 * @param x
-	 *            Pan-Position
-	 * @param y
-	 *            Tilt-Position
-	 * @param zoom
-	 *            Zoom
-	 * @see getPanSpaces(), getTiltSpaces(), getZoomSpaces()
-	 * @return True if move successful
-	 * @throws Exception
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#absoluteMove(java.lang.String, float, float, float)
 	 */
+	@Override
 	public boolean absoluteMove(String profileToken, float x, float y, float zoom) throws Exception {
 		PTZNode node = getNode(profileToken);
 		if (node != null) {
@@ -169,6 +193,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#isRelativeMoveSupported(java.lang.String)
+	 */
+	@Override
 	public boolean isRelativeMoveSupported(String profileToken) throws Exception {
 		if (onvifDevice.getMediaService() == null)
 			return false;
@@ -181,6 +209,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#relativeMove(java.lang.String, float, float, float)
+	 */
+	@Override
 	public boolean relativeMove(String profileToken, float x, float y, float zoom) throws Exception {
 
 		RelativeMove request = new RelativeMove();
@@ -203,6 +235,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#isContinuosMoveSupported(java.lang.String)
+	 */
+	@Override
 	public boolean isContinuosMoveSupported(String profileToken) throws Exception {
 		if (onvifDevice.getMediaService() == null)
 			return false;
@@ -215,6 +251,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#continuousMove(java.lang.String, float, float, float)
+	 */
+	@Override
 	public boolean continuousMove(String profileToken, float x, float y, float zoom) throws Exception {
 		ContinuousMove request = new ContinuousMove();
 
@@ -236,6 +276,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#stopMove(java.lang.String)
+	 */
+	@Override
 	public boolean stopMove(String profileToken) throws Exception {
 		Stop request = new Stop();
 		request.setPanTilt(true);
@@ -247,6 +291,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getStatus(java.lang.String)
+	 */
+	@Override
 	public PTZStatus getStatus(String profileToken) throws Exception {
 		GetStatus request = new GetStatus();
 		request.setProfileToken(profileToken);
@@ -257,6 +305,10 @@ public class PtzService extends AbstractService {
 		return response.getPTZStatus();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getPosition(java.lang.String)
+	 */
+	@Override
 	public PTZVector getPosition(String profileToken) throws Exception {
 		PTZStatus status = getStatus(profileToken);
 		if (status == null) {
@@ -265,6 +317,10 @@ public class PtzService extends AbstractService {
 		return status.getPosition();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#setHomePosition(java.lang.String)
+	 */
+	@Override
 	public boolean setHomePosition(String profileToken) throws Exception {
 		SetHomePosition request = new SetHomePosition();
 		request.setProfileToken(profileToken);
@@ -276,6 +332,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#getPresets(java.lang.String)
+	 */
+	@Override
 	public List<PTZPreset> getPresets(String profileToken) throws Exception {
 		GetPresets request = new GetPresets();
 		request.setProfileToken(profileToken);
@@ -286,6 +346,10 @@ public class PtzService extends AbstractService {
 		return response.getPreset();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#setPreset(java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
 	public String setPreset(String presetName, String presetToken, String profileToken) throws Exception {
 		SetPreset request = new SetPreset();
 		request.setProfileToken(profileToken);
@@ -298,10 +362,18 @@ public class PtzService extends AbstractService {
 		return response.getPresetToken();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#setPreset(java.lang.String, java.lang.String)
+	 */
+	@Override
 	public String setPreset(String presetName, String profileToken) throws Exception {
 		return setPreset(presetName, null, profileToken);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#removePreset(java.lang.String, java.lang.String)
+	 */
+	@Override
 	public boolean removePreset(String presetToken, String profileToken) throws Exception {
 		RemovePreset request = new RemovePreset();
 		request.setProfileToken(profileToken);
@@ -313,6 +385,10 @@ public class PtzService extends AbstractService {
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.PTZService#gotoPreset(java.lang.String, java.lang.String)
+	 */
+	@Override
 	public boolean gotoPreset(String presetToken, String profileToken) throws Exception {
 		GotoPreset request = new GotoPreset();
 		request.setProfileToken(profileToken);

@@ -12,7 +12,7 @@ import java.util.Properties;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.onvif.unofficial.OnvifDevice;
+import org.onvif.unofficial.NetOnvifDevice;
 import org.onvif.ver10.schema.NetworkInterface;
 import org.onvif.ver10.schema.Profile;
 import org.onvif.ver10.schema.VideoEncoderConfiguration;
@@ -23,7 +23,7 @@ import org.onvif.ver10.schema.VideoSourceConfiguration;
 
 public class TestHelper {
 
-	private OnvifDevice device;
+	private NetOnvifDevice device;
 	InputStream propStream;
 
 	@Before
@@ -39,7 +39,7 @@ public class TestHelper {
 			String login = props.getProperty("login");
 			String password = props.getProperty("password");
 			System.out.println(address + "/" + login + "/" + password);
-			device = new OnvifDevice(address, login, password);
+			device = new NetOnvifDevice(address, login, password);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

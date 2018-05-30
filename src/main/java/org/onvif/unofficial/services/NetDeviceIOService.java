@@ -1,6 +1,7 @@
 package org.onvif.unofficial.services;
 
-import org.onvif.unofficial.OnvifDevice;
+import org.onvif.unofficial.NetOnvifDevice;
+import org.onvif.unofficial.api.DeviceIOService;
 import org.onvif.unofficial.soapclient.ISoapClient;
 import org.onvif.ver10.schema.AbsoluteFocus;
 import org.onvif.ver10.schema.FocusMove;
@@ -15,13 +16,17 @@ import org.onvif.ver20.imaging.wsdl.MoveResponse;
 import org.onvif.ver20.imaging.wsdl.SetImagingSettings;
 import org.onvif.ver20.imaging.wsdl.SetImagingSettingsResponse;
 
-public class ImagingService extends AbstractService{
+public class NetDeviceIOService extends ServiceBase implements DeviceIOService{
 
 
-	public ImagingService(OnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
+	public NetDeviceIOService(NetOnvifDevice onvifDevice, ISoapClient client, String serviceUrl) {
 		super(onvifDevice, client, serviceUrl);
 			}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.DeviceIOService#getOptions(java.lang.String)
+	 */
+	@Override
 	public ImagingOptions20 getOptions(String videoSourceToken) throws Exception {
 		if (videoSourceToken == null) {
 			return null;
@@ -36,6 +41,10 @@ public class ImagingService extends AbstractService{
 		return response.getImagingOptions();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.DeviceIOService#moveFocus(java.lang.String, float)
+	 */
+	@Override
 	public boolean moveFocus(String videoSourceToken, float absoluteFocusValue) throws Exception {
 		if (videoSourceToken == null) {
 			return false;
@@ -51,6 +60,10 @@ public class ImagingService extends AbstractService{
 		return true;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.DeviceIOService#getImagingSettings(java.lang.String)
+	 */
+	@Override
 	public ImagingSettings20 getImagingSettings(String videoSourceToken) throws Exception {
 		if (videoSourceToken == null) {
 			return null;
@@ -66,6 +79,10 @@ public class ImagingService extends AbstractService{
 		return response.getImagingSettings();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.services.DeviceIOService#setImagingSettings(java.lang.String, org.onvif.ver10.schema.ImagingSettings20)
+	 */
+	@Override
 	public boolean setImagingSettings(String videoSourceToken, ImagingSettings20 imagingSettings) throws Exception {
 		if (videoSourceToken == null) {
 			return false;
