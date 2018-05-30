@@ -13,6 +13,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.onvif.unofficial.NetOnvifDevice;
+import org.onvif.unofficial.api.OnvifDevice;
 import org.onvif.ver10.schema.NetworkInterface;
 import org.onvif.ver10.schema.Profile;
 import org.onvif.ver10.schema.VideoEncoderConfiguration;
@@ -23,7 +24,7 @@ import org.onvif.ver10.schema.VideoSourceConfiguration;
 
 public class TestHelper {
 
-	private NetOnvifDevice device;
+	private OnvifDevice device;
 	InputStream propStream;
 
 	@Before

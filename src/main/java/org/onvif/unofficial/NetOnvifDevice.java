@@ -23,6 +23,7 @@ import org.onvif.unofficial.services.NetDeviceManagementService;
 import org.onvif.unofficial.api.DeviceIOService;
 import org.onvif.unofficial.api.DeviceManagementService;
 import org.onvif.unofficial.api.MediaService;
+import org.onvif.unofficial.api.OnvifDevice;
 import org.onvif.unofficial.api.PTZService;
 import org.onvif.unofficial.services.NetDeviceIOService;
 import org.onvif.unofficial.services.NetMediaService;
@@ -32,7 +33,7 @@ import org.onvif.unofficial.soapclient.SoapClient;
 import org.onvif.ver10.schema.Capabilities;
 
 
-public class NetOnvifDevice {
+public class NetOnvifDevice implements OnvifDevice {
 	private final String domain;
 	private String returnedDomain;
 	private boolean isProxy;
@@ -89,20 +90,36 @@ public class NetOnvifDevice {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.OnvifDevice#getDeviceManagementService()
+	 */
+	@Override
 	public DeviceManagementService getDeviceManagementService() {
 		return devMngtService;
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.OnvifDevice#getPTZService()
+	 */
+	@Override
 	public PTZService getPTZService() {
 		return ptzService;
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.OnvifDevice#getMediaService()
+	 */
+	@Override
 	public MediaService getMediaService() {
 		return mediaService;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.onvif.unofficial.OnvifDevice#getDeviceIOService()
+	 */
+	@Override
 	public DeviceIOService getDeviceIOService() {
 		return imagingService;
 	}
